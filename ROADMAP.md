@@ -13,23 +13,26 @@
 - User profile API and UI for display name, email, timezone, preferred currency, and password changes.
 - Owner-only application settings with allocation validation and audit logging.
 
-## Milestone 3: Dashboard, Wealth Cards, Charts
+## Milestone 3: Daily Savings, Dashboard, Receipt Vault
 
-- Wealth overview API.
-- Dashboard wealth cards.
-- Chart components backed by persisted records.
+- Daily wealth-entry records for realised profit and actual savings.
+- Settings-driven allocation calculation with historical percentages stored per entry.
+- Timezone-aware local entry dates and authoritative UTC timestamps.
+- Deterministic discipline scoring, status calculation, duplicate forex-date confirmation, and idempotent create requests.
+- Authenticated dashboard with tracked savings, goal progress, latest entries, charts, and saving streaks.
+- Receipt upload pipeline for JPEG, PNG, WebP, and PDF files with signature checks, maximum-size configuration, SHA-256 duplicate detection, owner-only access, and local filesystem storage.
 
-## Milestone 4: Daily Savings, 50/30/20 Calculator, Auto Date/Time
+## Milestone 4: OCR And Receipt Intelligence
 
-- Daily saving records.
-- 50/30/20 calculation service.
-- Timezone-aware date and time handling.
+- OCR extraction for uploaded receipts and Monzo screenshots.
+- Manual review and correction workflow for extracted values.
+- Stronger duplicate detection using extracted metadata where available.
 
-## Milestone 5: Receipt Upload, OCR, Duplicate Detection
+## Milestone 5: Daily Savings Automation
 
-- Receipt upload pipeline.
-- OCR extraction.
-- Duplicate detection using file hashing and persisted metadata.
+- Scheduled reminders and daily review prompts.
+- Additional date/time automation and reporting conveniences.
+- Refinements to the allocation workflow based on real usage.
 
 ## Milestone 6: Asset Tracker
 

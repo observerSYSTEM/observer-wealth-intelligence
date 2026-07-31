@@ -1,6 +1,6 @@
 "use client";
 
-import { LogOut, Settings, UserRound } from "lucide-react";
+import { FileText, LayoutDashboard, LogOut, ReceiptText, Settings, UserRound } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -21,6 +21,27 @@ export function AppFrame({ children }: { children: ReactNode }) {
             <h1 className="mt-1 text-2xl font-semibold sm:text-3xl">Wealth Intelligence</h1>
           </Link>
           <nav className="flex items-center gap-2" aria-label="Account">
+            <Link
+              href="/dashboard"
+              title="Dashboard"
+              className="grid h-10 w-10 place-items-center rounded-md border border-black/10 bg-white shadow-sm transition hover:bg-mist dark:border-white/10 dark:bg-white/10 dark:hover:bg-white/15"
+            >
+              <LayoutDashboard className="h-5 w-5" aria-hidden="true" />
+            </Link>
+            <Link
+              href="/entries"
+              title="Entries"
+              className="grid h-10 w-10 place-items-center rounded-md border border-black/10 bg-white shadow-sm transition hover:bg-mist dark:border-white/10 dark:bg-white/10 dark:hover:bg-white/15"
+            >
+              <FileText className="h-5 w-5" aria-hidden="true" />
+            </Link>
+            <Link
+              href="/receipts"
+              title="Receipt vault"
+              className="grid h-10 w-10 place-items-center rounded-md border border-black/10 bg-white shadow-sm transition hover:bg-mist dark:border-white/10 dark:bg-white/10 dark:hover:bg-white/15"
+            >
+              <ReceiptText className="h-5 w-5" aria-hidden="true" />
+            </Link>
             <Link
               href="/profile"
               title="Profile"

@@ -1,4 +1,5 @@
 from collections.abc import Generator
+from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
@@ -13,6 +14,19 @@ from app.main import app
 from app.services.rate_limit import login_rate_limiter
 
 SQLALCHEMY_DATABASE_URL = "sqlite+pysqlite://"
+
+
+@pytest.fixture(autouse=True)
+def receipt_storage(tmp_path: Path) -> Generator[None]:
+    original_path = settings.receipt_storage_path
+    original_size = settings.receipt_max_file_size_bytes
+    settings.receipt_storage_path = str(tmp_path / "receipts")
+    settings.receipt_max_file_size_bytes = 10 * 1024 * 1024
+    try:
+        yield
+    finally:
+        settings.receipt_storage_path = original_path
+        settings.receipt_max_file_size_bytes = original_size
 
 
 @pytest.fixture()

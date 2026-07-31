@@ -1,6 +1,6 @@
 # Observer Wealth Intelligence
 
-Observer Wealth Intelligence is a private wealth tracking system designed for local-first deployment, including Raspberry Pi hosting. The current build includes the clean FastAPI/Next.js architecture plus private-user authentication, first-owner setup, profile management, application settings, rotating refresh sessions, and light/dark UI support.
+Observer Wealth Intelligence is a private wealth tracking system designed for local-first deployment, including Raspberry Pi hosting. The current build includes the clean FastAPI/Next.js architecture, private-user authentication, profile management, owner settings, daily wealth entries, allocation tracking, an authenticated dashboard, and a local receipt vault.
 
 ## Architecture
 
@@ -11,6 +11,26 @@ Observer Wealth Intelligence is a private wealth tracking system designed for lo
 - `database/` contains PostgreSQL runtime configuration.
 - `docs/` contains architecture, environment, deployment, and operations notes.
 - `.github/` contains CI workflow configuration.
+
+## Daily Wealth Entries
+
+Authenticated users can record realised profit from `forex`, `business`, `employment`, or `other` sources in `GBP`, `USD`, or `NGN`. The backend applies the current settings percentages to each entry and stores the percentages used, so historical recommendations remain unchanged after settings edits.
+
+Default allocation is 50% savings, 30% business, and 20% living. For a `GBP 300.00` realised profit entry, the recommended split is `GBP 150.00`, `GBP 90.00`, and `GBP 60.00`. Money is stored with fixed decimal precision and rounded consistently to two decimal places.
+
+Actual savings are the source of truth for totals. Saving above the recommended target counts in full. Zero-profit and negative-profit entries do not create a savings obligation and do not harm discipline scores or streaks.
+
+## Dashboard
+
+The dashboard uses authenticated-user data only. It shows tracked savings, month and year totals, today's realised profit and savings, average eligible savings, current and average discipline scores, goal progress, latest entries, daily savings, monthly savings, and current/longest saving streaks.
+
+For this milestone, goal progress only uses actual savings in the configured primary goal currency. The app does not perform foreign-exchange conversion yet, so savings in other currencies are shown separately and excluded from primary-goal progress.
+
+## Receipt Vault
+
+Receipts and payment screenshots can be uploaded as JPEG, PNG, WebP, or PDF files. Uploads are checked by MIME type, extension, file signature, configured size limit, and SHA-256 checksum. Duplicate receipts are detected per user. The API stores metadata in PostgreSQL and file contents on disk under `data/receipts/<user_uuid>/<year>/<month>/`.
+
+Direct filesystem paths are never returned by the API. Receipt content is available only through authenticated owner-checked download and preview endpoints.
 
 ## Local Development
 
@@ -68,6 +88,7 @@ npm ci
 npm run typecheck
 npm run lint
 npm run build
+npm audit --omit=dev
 ```
 
 ## Roadmap

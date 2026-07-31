@@ -20,6 +20,24 @@ Open `/setup` after the first deployment. The first registered account becomes t
 
 The backup script uses `pg_dump` inside the database container and writes a compressed archive under `backups/`.
 
+The archive includes:
+
+- A PostgreSQL custom-format dump.
+- Receipt files from `RECEIPT_STORAGE_PATH` when the directory exists.
+- Non-secret recovery configuration, including Compose overlays, Docker config, deployment scripts, systemd config, database config, and `.env.example`.
+- A manifest and `SHA256SUMS` file when checksum tooling is available.
+
+The script excludes `.env` by default. Set `INCLUDE_SECRETS_IN_BACKUP=true` only when the backup destination is encrypted and intentionally allowed to contain secrets.
+
+The script validates the compressed archive with `tar -tzf` before reporting success. To perform a manual checksum verification after extraction:
+
+```bash
+cd extracted-backup-directory
+sha256sum -c SHA256SUMS
+```
+
+Receipt files live outside PostgreSQL, so a complete recovery requires both the database dump and the receipt directory captured in the archive.
+
 ## Updates
 
 ```bash

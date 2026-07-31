@@ -14,6 +14,8 @@ class Settings(BaseSettings):
     refresh_token_expire_days: int = 30
     login_rate_limit_attempts: int = 5
     login_rate_limit_window_seconds: int = 900
+    receipt_max_file_size_bytes: int = 10 * 1024 * 1024
+    receipt_storage_path: str = "data/receipts"
     database_url: str = (
         "postgresql+psycopg://observer:observer-local-password@localhost:5432/observer_wealth"
     )

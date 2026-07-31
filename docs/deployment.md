@@ -22,7 +22,7 @@ Production mode runs the backend behind Nginx and serves the Next.js standalone 
 ./deploy/install-pi.sh
 ```
 
-The Pi overlay uses smaller PostgreSQL memory settings and installs a systemd unit that restarts the Docker Compose stack after boot.
+The Pi overlay uses smaller PostgreSQL memory settings and installs a systemd unit that restarts the Docker Compose stack after boot. Keep `RECEIPT_STORAGE_PATH` on persistent storage with enough capacity for screenshots, PDFs, and local backups.
 
 ## Database Migrations
 

@@ -9,6 +9,8 @@
 | `REFRESH_TOKEN_EXPIRE_DAYS` | No | Refresh-session lifetime. |
 | `LOGIN_RATE_LIMIT_ATTEMPTS` | No | Failed login attempts allowed per window. |
 | `LOGIN_RATE_LIMIT_WINDOW_SECONDS` | No | Login rate-limit window. |
+| `RECEIPT_MAX_FILE_SIZE_BYTES` | No | Maximum accepted receipt upload size. Default is 10 MiB. |
+| `RECEIPT_STORAGE_PATH` | No | Local filesystem path for receipt files. Default is `data/receipts`. |
 | `COOKIE_SECURE` | Production HTTPS | Forces auth cookies to use the Secure flag. |
 | `COOKIE_SAMESITE` | No | Auth cookie SameSite policy. |
 | `DATABASE_URL` | Yes | SQLAlchemy PostgreSQL connection string. |
@@ -18,3 +20,6 @@
 | `CORS_ORIGINS` | No | JSON array of allowed browser origins. |
 | `NEXT_PUBLIC_API_URL` | No | Browser-visible API base URL. Empty value uses same origin. |
 | `BACKUP_DIR` | No | Directory used by backup script. |
+| `INCLUDE_SECRETS_IN_BACKUP` | No | Includes `.env` in backup archives only when set to `true`. Use encrypted storage. |
+
+Receipt files should be stored on persistent disk. PostgreSQL backups do not include receipt bytes; the backup script copies `RECEIPT_STORAGE_PATH` separately.

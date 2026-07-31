@@ -97,6 +97,16 @@ export async function apiFetch<T>(
   return (await response.json()) as T;
 }
 
+export async function apiBlob(path: string): Promise<Blob> {
+  const response = await fetch(`${apiBaseUrl}${path}`, {
+    credentials: "include"
+  });
+  if (!response.ok) {
+    throw new ApiError(response.status, await parseError(response));
+  }
+  return response.blob();
+}
+
 export function errorMessage(error: unknown) {
   return error instanceof ApiError ? error.detail : "Something went wrong.";
 }
