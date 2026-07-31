@@ -8,9 +8,10 @@
 
 ## Milestone 2: Authentication, User Profile, Settings
 
-- Complete account lifecycle flows.
-- User profile API and UI.
-- Settings storage and management.
+- First-owner setup and private registration flow.
+- Cookie-backed login, logout, current user, access refresh, rotating refresh tokens, revocation, CSRF protection, and rate limiting.
+- User profile API and UI for display name, email, timezone, preferred currency, and password changes.
+- Owner-only application settings with allocation validation and audit logging.
 
 ## Milestone 3: Dashboard, Wealth Cards, Charts
 

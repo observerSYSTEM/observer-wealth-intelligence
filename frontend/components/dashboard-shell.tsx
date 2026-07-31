@@ -4,8 +4,10 @@ import { Activity, Database, Server } from "lucide-react";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 
-import { ThemeToggle } from "@/components/theme-toggle";
-import { apiBaseUrl } from "@/lib/api";
+import { AppFrame } from "@/components/app-frame";
+import { useAuth } from "@/components/auth-provider";
+import { ProtectedRoute } from "@/components/protected-route";
+import { apiBaseUrl, apiFetch } from "@/lib/api";
 
 type HealthState = {
   status: "ok";
@@ -16,6 +18,7 @@ type HealthState = {
 type LoadState = "idle" | "loading" | "ready" | "error";
 
 export function DashboardShell() {
+  const { user } = useAuth();
   const [health, setHealth] = useState<HealthState | null>(null);
   const [loadState, setLoadState] = useState<LoadState>("idle");
 
@@ -25,14 +28,11 @@ export function DashboardShell() {
     async function loadHealth() {
       setLoadState("loading");
       try {
-        const response = await fetch(`${apiBaseUrl}/api/v1/health`, {
-          signal: controller.signal,
-          headers: { Accept: "application/json" }
-        });
-        if (!response.ok) {
-          throw new Error(`Health check failed with ${response.status}`);
-        }
-        const data = (await response.json()) as HealthState;
+        const data = await apiFetch<HealthState>(
+          "/api/v1/health",
+          { signal: controller.signal },
+          { retryOnUnauthorized: false }
+        );
         setHealth(data);
         setLoadState("ready");
       } catch {
@@ -54,18 +54,8 @@ export function DashboardShell() {
   }, [loadState]);
 
   return (
-    <main className="min-h-screen bg-[#f6f7f4] text-ink transition-colors dark:bg-ink dark:text-white">
-      <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 py-4 sm:px-6 lg:px-8">
-        <header className="flex flex-wrap items-center justify-between gap-3 border-b border-black/10 pb-4 dark:border-white/10">
-          <div>
-            <p className="text-sm font-medium uppercase tracking-[0.18em] text-moss dark:text-mist">
-              Observer
-            </p>
-            <h1 className="mt-1 text-2xl font-semibold sm:text-3xl">Wealth Intelligence</h1>
-          </div>
-          <ThemeToggle />
-        </header>
-
+    <ProtectedRoute>
+      <AppFrame>
         <section className="grid flex-1 gap-4 py-6 md:grid-cols-3">
           <StatusTile
             icon={<Activity className="h-5 w-5" aria-hidden="true" />}
@@ -110,14 +100,15 @@ export function DashboardShell() {
           <div className="rounded-lg border border-black/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/5">
             <h2 className="text-lg font-semibold">System Status</h2>
             <div className="mt-4 space-y-3 text-sm">
+              <Row label="Signed in" value={user?.display_name ?? "Authenticated"} />
               <Row label="API endpoint" value={apiBaseUrl || "Same origin"} />
               <Row label="Auth mode" value="JWT bearer" />
               <Row label="Storage" value="PostgreSQL" />
             </div>
           </div>
         </section>
-      </div>
-    </main>
+      </AppFrame>
+    </ProtectedRoute>
   );
 }
 

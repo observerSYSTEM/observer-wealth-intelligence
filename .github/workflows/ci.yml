@@ -30,6 +30,9 @@ jobs:
       - name: Test backend
         working-directory: backend
         run: pytest
+      - name: Typecheck backend
+        working-directory: backend
+        run: mypy app
 
   frontend:
     runs-on: ubuntu-latest

@@ -11,9 +11,11 @@ The backend is a FastAPI application under `backend/app`.
 - `db/` owns SQLAlchemy metadata, engine, and session wiring.
 - `models/` contains SQLAlchemy ORM models.
 - `schemas/` contains Pydantic request and response contracts.
-- `services/` contains application operations used by routes.
+- `services/` contains authentication, session, settings, audit, rate-limit, and other application operations used by routes.
 
-Alembic migrations live in `backend/alembic`. The first migration creates the `users` table used by JWT authentication.
+Alembic migrations live in `backend/alembic`. The first migration creates the initial `users` table; the second migration adds owner/user roles, profile fields, refresh sessions, settings, and audit logs.
+
+Authentication uses short-lived JWT access tokens and rotating refresh tokens stored in HTTP-only cookies. Refresh tokens are persisted only as HMAC hashes. State-changing requests require CSRF validation through the readable CSRF cookie and `X-CSRF-Token` header.
 
 ## Frontend
 
@@ -23,7 +25,7 @@ The frontend is a Next.js App Router application under `frontend`.
 - `components/` contains reusable UI.
 - `lib/` contains browser-safe utilities.
 
-The dashboard reads live health state from the API and renders empty financial totals until persisted records are introduced in later milestones.
+The dashboard and account pages use client-side route protection. Fresh installations redirect to `/setup`; unauthenticated users redirect to `/login`.
 
 ## Database
 

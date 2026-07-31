@@ -6,6 +6,11 @@
 | `ENVIRONMENT` | No | `development`, `test`, or `production`. |
 | `SECRET_KEY` | Yes in production | JWT signing secret. |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | No | JWT access token lifetime. |
+| `REFRESH_TOKEN_EXPIRE_DAYS` | No | Refresh-session lifetime. |
+| `LOGIN_RATE_LIMIT_ATTEMPTS` | No | Failed login attempts allowed per window. |
+| `LOGIN_RATE_LIMIT_WINDOW_SECONDS` | No | Login rate-limit window. |
+| `COOKIE_SECURE` | Production HTTPS | Forces auth cookies to use the Secure flag. |
+| `COOKIE_SAMESITE` | No | Auth cookie SameSite policy. |
 | `DATABASE_URL` | Yes | SQLAlchemy PostgreSQL connection string. |
 | `POSTGRES_DB` | No | PostgreSQL database name used by Docker Compose. |
 | `POSTGRES_USER` | No | PostgreSQL user used by Docker Compose. |

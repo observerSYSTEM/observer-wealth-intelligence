@@ -10,11 +10,19 @@ class Settings(BaseSettings):
     environment: Literal["development", "test", "production"] = "development"
     api_v1_prefix: str = "/api/v1"
     secret_key: str = Field(default="development-secret-change-before-production", min_length=32)
-    access_token_expire_minutes: int = 60
+    access_token_expire_minutes: int = 15
+    refresh_token_expire_days: int = 30
+    login_rate_limit_attempts: int = 5
+    login_rate_limit_window_seconds: int = 900
     database_url: str = (
         "postgresql+psycopg://observer:observer-local-password@localhost:5432/observer_wealth"
     )
     cors_origins: list[str] = ["http://localhost:3000", "http://localhost:8080"]
+    access_cookie_name: str = "owi_access_token"
+    refresh_cookie_name: str = "owi_refresh_token"
+    csrf_cookie_name: str = "owi_csrf_token"
+    cookie_secure: bool | None = None
+    cookie_samesite: Literal["lax", "strict", "none"] = "lax"
 
     model_config = SettingsConfigDict(
         env_file=".env",
@@ -30,6 +38,12 @@ class Settings(BaseSettings):
         if environment == "production" and value == "development-secret-change-before-production":
             raise ValueError("SECRET_KEY must be changed for production")
         return value
+
+    @property
+    def secure_cookies(self) -> bool:
+        if self.cookie_secure is not None:
+            return self.cookie_secure
+        return self.environment == "production"
 
 
 @lru_cache

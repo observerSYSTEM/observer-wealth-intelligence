@@ -16,6 +16,15 @@ cp .env.example .env
 
 Set `SECRET_KEY` to a strong random value before any shared or production deployment.
 
+For HTTPS production deployments, set:
+
+```bash
+COOKIE_SECURE=true
+COOKIE_SAMESITE=lax
+```
+
+For localhost development, keep `COOKIE_SECURE=false`.
+
 ## Development Install
 
 ```bash
@@ -26,6 +35,7 @@ Open:
 
 - Frontend: `http://localhost:3000`
 - Backend health: `http://localhost:8000/api/v1/health`
+- First-owner setup: `http://localhost:3000/setup`
 
 ## Production Install
 
@@ -34,6 +44,8 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build -d
 ```
 
 Open `http://localhost:8080`.
+
+After the first owner account is created, registration is disabled by default.
 
 ## Raspberry Pi Install
 
@@ -69,3 +81,7 @@ Backups are written to `backups/` and include a PostgreSQL custom-format dump.
 ```bash
 ./deploy/update.sh
 ```
+
+## Local Owner Recovery
+
+This release does not send password reset email. If the owner password is lost, use local shell access to generate a new Argon2 password hash, update the owner row in PostgreSQL, revoke refresh sessions, then log in and change the password again through `/profile`.

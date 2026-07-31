@@ -16,7 +16,8 @@ def test_password_hash_round_trip() -> None:
 
 
 def test_access_token_round_trip() -> None:
-    token = create_access_token(subject="user-1")
+    token = create_access_token(subject="user-1", session_id="session-1")
     payload = decode_access_token(token)
 
     assert payload["sub"] == "user-1"
+    assert payload["sid"] == "session-1"
