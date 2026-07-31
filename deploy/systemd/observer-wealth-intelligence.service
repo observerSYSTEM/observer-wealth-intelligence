@@ -1,0 +1,16 @@
+[Unit]
+Description=Observer Wealth Intelligence
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/observer-wealth-intelligence
+RemainAfterExit=yes
+ExecStart=/usr/bin/docker compose -f docker-compose.yml -f docker-compose.pi.yml up -d
+ExecStop=/usr/bin/docker compose -f docker-compose.yml -f docker-compose.pi.yml down
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target

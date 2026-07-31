@@ -1,0 +1,38 @@
+services:
+  db:
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/postgresql.raspberry-pi.conf:/etc/postgresql/postgresql.conf:ro
+    shm_size: "128mb"
+
+  backend:
+    environment:
+      ENVIRONMENT: production
+    deploy:
+      resources:
+        limits:
+          memory: 384M
+
+  frontend:
+    build:
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      - "${HTTP_PORT:-8080}:80"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      backend:
+        condition: service_started
+      frontend:
+        condition: service_started

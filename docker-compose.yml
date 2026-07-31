@@ -1,0 +1,49 @@
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-observer_wealth}
+      POSTGRES_USER: ${POSTGRES_USER:-observer}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-observer-local-password}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/postgresql.conf:/etc/postgresql/postgresql.conf:ro
+    command: ["postgres", "-c", "config_file=/etc/postgresql/postgresql.conf"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-observer} -d ${POSTGRES_DB:-observer_wealth}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: .
+      dockerfile: docker/backend/Dockerfile
+    restart: unless-stopped
+    environment:
+      APP_NAME: ${APP_NAME:-Observer Wealth Intelligence}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      SECRET_KEY: ${SECRET_KEY:-development-secret-change-before-production}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-60}
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://observer:observer-local-password@db:5432/observer_wealth}
+      CORS_ORIGINS: ${CORS_ORIGINS:-["http://localhost:3000","http://localhost:8080"]}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      dockerfile: docker/frontend/Dockerfile
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
+    depends_on:
+      backend:
+        condition: service_started
+
+volumes:
+  postgres_data:
