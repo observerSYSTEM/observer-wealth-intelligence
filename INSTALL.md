@@ -16,14 +16,21 @@ cp .env.example .env
 
 Set `SECRET_KEY` to a strong random value before any shared or production deployment.
 
-Receipt uploads are stored outside PostgreSQL. The default location is:
+Uploaded files and OCR artifacts are stored outside PostgreSQL. The default layout is:
 
 ```bash
 RECEIPT_STORAGE_PATH=data/receipts
 RECEIPT_MAX_FILE_SIZE_BYTES=10485760
+ASSET_STORAGE_PATH=data/assets
+VAULT_STORAGE_PATH=data/vault
+OCR_STORAGE_PATH=data/ocr
+VAULT_MAX_FILE_SIZE_BYTES=26214400
+EASYOCR_LANGUAGES=["en"]
 ```
 
-Keep the receipt storage path on persistent disk and size it for payment screenshots and PDF receipts. On Raspberry Pi deployments, prefer an SD card or external disk with enough spare capacity for the database volume, receipt files, and backups.
+Keep these storage paths on persistent disk and size them for payment screenshots, PDFs, asset documents, vault documents, OCR text artifacts, and backups. On Raspberry Pi deployments, prefer an SD card or external disk with enough spare capacity for the database volume, uploaded files, OCR output, and backup archives.
+
+The OCR foundation uses EasyOCR and PyMuPDF. The OCR API loads these libraries only when an OCR job runs, but production images install them through `backend/requirements.txt`.
 
 For HTTPS production deployments, set:
 
@@ -85,7 +92,7 @@ sudo journalctl -u observer-wealth-intelligence -f
 
 Backups are written to `backups/` and include a PostgreSQL custom-format dump.
 
-Backups also include receipt files and non-secret recovery configuration. The `.env` file is excluded by default; set `INCLUDE_SECRETS_IN_BACKUP=true` only when writing to encrypted storage and you intentionally want secrets inside the archive.
+Backups also include receipt files, asset files, vault files, OCR artifacts, and non-secret recovery configuration. The `.env` file is excluded by default; set `INCLUDE_SECRETS_IN_BACKUP=true` only when writing to encrypted storage and you intentionally want secrets inside the archive.
 
 Each backup archive includes a `SHA256SUMS` file when checksum tooling is available, and the script verifies that the compressed archive can be listed before it reports success.
 

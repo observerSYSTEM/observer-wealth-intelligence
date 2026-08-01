@@ -22,23 +22,26 @@
 - Authenticated dashboard with tracked savings, goal progress, latest entries, charts, and saving streaks.
 - Receipt upload pipeline for JPEG, PNG, WebP, and PDF files with signature checks, maximum-size configuration, SHA-256 duplicate detection, owner-only access, and local filesystem storage.
 
-## Milestone 4: OCR And Receipt Intelligence
+## Milestone 4: Portfolio Engine, OCR Foundation, Digital Vault
 
-- OCR extraction for uploaded receipts and Monzo screenshots.
-- Manual review and correction workflow for extracted values.
-- Stronger duplicate detection using extracted metadata where available.
+- Generic portfolio asset system across cash, investments, crypto, property, business, trading accounts, vehicles, and other assets.
+- Append-only asset value history and asset document support.
+- Digital vault folders with upload, preview, download, delete, tags, notes, search, owner isolation, and checksum duplicate detection.
+- OCR foundation using EasyOCR with amount, date, time, reference extraction and explicit review/confirmation.
+- Dashboard 2.0 with total assets, category cards, asset allocation, portfolio growth, recent assets, recent receipts, tracked savings, and goal progress.
+- Multi-currency storage for GBP, USD, NGN, and EUR with exchange-rate placeholders and no FX conversion.
 
-## Milestone 5: Daily Savings Automation
+## Milestone 5: OCR Intelligence And Duplicate Review
 
-- Scheduled reminders and daily review prompts.
-- Additional date/time automation and reporting conveniences.
-- Refinements to the allocation workflow based on real usage.
+- OCR-assisted receipt review improvements.
+- Stronger duplicate detection using confirmed OCR metadata.
+- Optional linking from confirmed OCR results into entries, assets, or vault records.
 
-## Milestone 6: Asset Tracker
+## Milestone 6: Integrations And Asset Sources
 
-- Asset tracking for Monzo, BluNest, Vanguard, USDT, land, and business holdings.
-- Manual valuation history.
-- Source-specific metadata without storing banking credentials.
+- Source-specific workflows for Monzo, BluNest, Vanguard, USDT, land, and business holdings.
+- Manual import helpers and source metadata without storing banking credentials.
+- Daily savings automation and reminders.
 
 ## Milestone 7: Reports, CSV, PDF
 

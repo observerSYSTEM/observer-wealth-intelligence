@@ -1,17 +1,23 @@
 export function currencySymbol(currency: string) {
-  if (currency === "GBP") return "£";
-  if (currency === "USD") return "$";
-  if (currency === "NGN") return "₦";
   return `${currency} `;
 }
 
 export function formatMoney(value: string | number, currency: string) {
   const numeric = Number(value);
-  if (!Number.isFinite(numeric)) return `${currencySymbol(currency)}0.00`;
-  return `${currencySymbol(currency)}${numeric.toLocaleString("en-GB", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2
-  })}`;
+  const amount = Number.isFinite(numeric) ? numeric : 0;
+  try {
+    return new Intl.NumberFormat("en-GB", {
+      style: "currency",
+      currency,
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(amount);
+  } catch {
+    return `${currencySymbol(currency)}${amount.toLocaleString("en-GB", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    })}`;
+  }
 }
 
 export function formatPercent(value: string | number) {

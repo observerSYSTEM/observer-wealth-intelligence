@@ -1,6 +1,6 @@
 # Observer Wealth Intelligence
 
-Observer Wealth Intelligence is a private wealth tracking system designed for local-first deployment, including Raspberry Pi hosting. The current build includes the clean FastAPI/Next.js architecture, private-user authentication, profile management, owner settings, daily wealth entries, allocation tracking, an authenticated dashboard, and a local receipt vault.
+Observer Wealth Intelligence is a private wealth tracking system designed for local-first deployment, including Raspberry Pi hosting. The current build includes the clean FastAPI/Next.js architecture, private-user authentication, profile management, owner settings, daily wealth entries, allocation tracking, portfolio assets, append-only value history, a digital vault, OCR review foundations, and Dashboard 2.0.
 
 ## Architecture
 
@@ -14,7 +14,7 @@ Observer Wealth Intelligence is a private wealth tracking system designed for lo
 
 ## Daily Wealth Entries
 
-Authenticated users can record realised profit from `forex`, `business`, `employment`, or `other` sources in `GBP`, `USD`, or `NGN`. The backend applies the current settings percentages to each entry and stores the percentages used, so historical recommendations remain unchanged after settings edits.
+Authenticated users can record realised profit from `forex`, `business`, `employment`, or `other` sources in `GBP`, `USD`, `NGN`, or `EUR`. The backend applies the current settings percentages to each entry and stores the percentages used, so historical recommendations remain unchanged after settings edits.
 
 Default allocation is 50% savings, 30% business, and 20% living. For a `GBP 300.00` realised profit entry, the recommended split is `GBP 150.00`, `GBP 90.00`, and `GBP 60.00`. Money is stored with fixed decimal precision and rounded consistently to two decimal places.
 
@@ -22,15 +22,42 @@ Actual savings are the source of truth for totals. Saving above the recommended 
 
 ## Dashboard
 
-The dashboard uses authenticated-user data only. It shows tracked savings, month and year totals, today's realised profit and savings, average eligible savings, current and average discipline scores, goal progress, latest entries, daily savings, monthly savings, and current/longest saving streaks.
+The dashboard uses authenticated-user data only. It shows total assets, tracked savings, cash, investments, property, crypto, business, trading accounts, goal progress, asset allocation, portfolio growth, recent assets, recent receipts, latest entries, and daily savings.
 
-For this milestone, goal progress only uses actual savings in the configured primary goal currency. The app does not perform foreign-exchange conversion yet, so savings in other currencies are shown separately and excluded from primary-goal progress.
+Goal progress and portfolio cards use the configured primary goal currency only. The app does not perform foreign-exchange conversion yet, so values in other currencies are stored and shown separately.
+
+## Portfolio Engine
+
+Assets are generic records grouped into `cash`, `investment`, `crypto`, `property`, `business`, `trading_account`, `vehicle`, or `other`. Each category can contain unlimited assets. Supported statuses are `active`, `sold`, `closed`, and `archived`.
+
+Every asset value change appends an `asset_value_history` row. The latest asset `current_value` is updated for fast dashboard reads, but previous values are never overwritten or removed.
+
+## Digital Vault And OCR
+
+The digital vault stores metadata in PostgreSQL and file content on local disk. Supported folders are receipts, certificates, passports, land documents, company documents, tax documents, trading statements, insurance, and other. Documents support upload, preview, download, delete, tags, notes, and search.
+
+OCR uses an EasyOCR service adapter. OCR jobs run against existing receipts or vault documents, store extracted text and parsed amount/date/time/reference as separate pending-review rows, and require user confirmation before the OCR result is marked confirmed. OCR never overwrites the original uploaded file.
 
 ## Receipt Vault
 
 Receipts and payment screenshots can be uploaded as JPEG, PNG, WebP, or PDF files. Uploads are checked by MIME type, extension, file signature, configured size limit, and SHA-256 checksum. Duplicate receipts are detected per user. The API stores metadata in PostgreSQL and file contents on disk under `data/receipts/<user_uuid>/<year>/<month>/`.
 
 Direct filesystem paths are never returned by the API. Receipt content is available only through authenticated owner-checked download and preview endpoints.
+
+## Storage Layout
+
+Runtime data is ignored by Git and stored under:
+
+```text
+data/
+  assets/
+  vault/
+  receipts/
+  ocr/
+backups/
+```
+
+Backups include the database dump, receipt files, asset files, vault files, OCR artifacts, and non-secret recovery configuration.
 
 ## Local Development
 
@@ -75,6 +102,7 @@ cd backend
 python -m venv .venv
 . .venv/bin/activate
 pip install -r requirements.txt -r requirements-dev.txt
+ruff check .
 python -m compileall app alembic
 pytest
 mypy app

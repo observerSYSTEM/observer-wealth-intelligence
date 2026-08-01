@@ -9,6 +9,7 @@ from app.models.user import User
 from app.models.wealth_entry import WealthEntry
 from app.schemas.dashboard import CurrencySavingsTotal, DashboardSummaryRead
 from app.services.entries import entry_to_read, quantize_money, user_today
+from app.services.portfolio import portfolio_summary
 from app.services.settings import get_app_settings
 
 
@@ -113,6 +114,7 @@ def dashboard_summary(db: Session, user: User) -> DashboardSummaryRead:
     )
     current_score = scored_entries[0].discipline_score if scored_entries else None
     current_streak, longest_streak = streaks(matching_entries)
+    portfolio = portfolio_summary(db, user)
 
     by_currency: dict[str, Decimal] = defaultdict(lambda: Decimal("0.00"))
     daily: dict[date, Decimal] = defaultdict(lambda: Decimal("0.00"))
@@ -149,4 +151,18 @@ def dashboard_summary(db: Session, user: User) -> DashboardSummaryRead:
         monthly_savings=[
             (month, quantize_money(amount)) for month, amount in sorted(monthly.items())[-12:]
         ],
+        total_assets=portfolio.total_assets,
+        cash=portfolio.cash,
+        investments=portfolio.investments,
+        crypto=portfolio.crypto,
+        property=portfolio.property,
+        business=portfolio.business,
+        trading_accounts=portfolio.trading_accounts,
+        asset_allocation=portfolio.allocation,
+        portfolio_growth=[
+            (point.valuation_date, point.currency, point.total_value)
+            for point in portfolio.growth
+        ],
+        recent_assets=portfolio.recent_assets,
+        recent_receipts=portfolio.recent_receipts,
     )

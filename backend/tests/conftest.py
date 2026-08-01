@@ -20,13 +20,25 @@ SQLALCHEMY_DATABASE_URL = "sqlite+pysqlite://"
 def receipt_storage(tmp_path: Path) -> Generator[None]:
     original_path = settings.receipt_storage_path
     original_size = settings.receipt_max_file_size_bytes
+    original_asset_path = settings.asset_storage_path
+    original_vault_path = settings.vault_storage_path
+    original_ocr_path = settings.ocr_storage_path
+    original_vault_size = settings.vault_max_file_size_bytes
     settings.receipt_storage_path = str(tmp_path / "receipts")
     settings.receipt_max_file_size_bytes = 10 * 1024 * 1024
+    settings.asset_storage_path = str(tmp_path / "assets")
+    settings.vault_storage_path = str(tmp_path / "vault")
+    settings.ocr_storage_path = str(tmp_path / "ocr")
+    settings.vault_max_file_size_bytes = 25 * 1024 * 1024
     try:
         yield
     finally:
         settings.receipt_storage_path = original_path
         settings.receipt_max_file_size_bytes = original_size
+        settings.asset_storage_path = original_asset_path
+        settings.vault_storage_path = original_vault_path
+        settings.ocr_storage_path = original_ocr_path
+        settings.vault_max_file_size_bytes = original_vault_size
 
 
 @pytest.fixture()

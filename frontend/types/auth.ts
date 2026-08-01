@@ -1,5 +1,5 @@
 export type UserRole = "owner" | "user";
-export type Currency = "GBP" | "USD" | "NGN";
+export type Currency = "GBP" | "USD" | "NGN" | "EUR";
 export type ThemePreference = "system" | "light" | "dark";
 
 export type User = {

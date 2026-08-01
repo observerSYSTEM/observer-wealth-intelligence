@@ -3,7 +3,10 @@ from decimal import Decimal
 
 from pydantic import BaseModel
 
+from app.schemas.asset import AssetRead
 from app.schemas.entry import EntryRead
+from app.schemas.portfolio import CategoryValueRead
+from app.schemas.receipt import ReceiptRead
 
 
 class CurrencySavingsTotal(BaseModel):
@@ -30,3 +33,14 @@ class DashboardSummaryRead(BaseModel):
     savings_by_currency: list[CurrencySavingsTotal]
     daily_savings: list[tuple[date, Decimal]]
     monthly_savings: list[tuple[str, Decimal]]
+    total_assets: Decimal
+    cash: Decimal
+    investments: Decimal
+    crypto: Decimal
+    property: Decimal
+    business: Decimal
+    trading_accounts: Decimal
+    asset_allocation: list[CategoryValueRead]
+    portfolio_growth: list[tuple[date, str, Decimal]]
+    recent_assets: list[AssetRead]
+    recent_receipts: list[ReceiptRead]

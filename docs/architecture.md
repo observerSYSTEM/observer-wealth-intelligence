@@ -11,9 +11,9 @@ The backend is a FastAPI application under `backend/app`.
 - `db/` owns SQLAlchemy metadata, engine, and session wiring.
 - `models/` contains SQLAlchemy ORM models.
 - `schemas/` contains Pydantic request and response contracts.
-- `services/` contains authentication, session, settings, audit, rate-limit, wealth-entry, dashboard, and receipt-storage operations used by routes.
+- `services/` contains authentication, session, settings, audit, rate-limit, wealth-entry, dashboard, receipt-storage, asset, portfolio, vault, OCR, and search operations used by routes.
 
-Alembic migrations live in `backend/alembic`. The first migration creates the initial `users` table; the second migration adds owner/user roles, profile fields, refresh sessions, settings, and audit logs. The third migration adds `wealth_entries` and `receipts`.
+Alembic migrations live in `backend/alembic`. The first migration creates the initial `users` table; the second migration adds owner/user roles, profile fields, refresh sessions, settings, and audit logs. The third migration adds `wealth_entries` and `receipts`. The fourth migration adds assets, asset value history, vault documents, and OCR results.
 
 Authentication uses short-lived JWT access tokens and rotating refresh tokens stored in HTTP-only cookies. Refresh tokens are persisted only as HMAC hashes. State-changing requests require CSRF validation through the readable CSRF cookie and `X-CSRF-Token` header.
 
@@ -25,7 +25,7 @@ The frontend is a Next.js App Router application under `frontend`.
 - `components/` contains reusable UI.
 - `lib/` contains browser-safe utilities.
 
-The dashboard, entry, receipt, and account pages use client-side route protection. Fresh installations redirect to `/setup`; unauthenticated users redirect to `/login`.
+The dashboard, entry, receipt, asset, portfolio, vault, and account pages use client-side route protection. Fresh installations redirect to `/setup`; unauthenticated users redirect to `/login`.
 
 ## Daily Wealth Entries
 
@@ -43,9 +43,27 @@ Each receipt can be linked to one entry. Entry deletion keeps receipt metadata. 
 
 ## Dashboard
 
-The dashboard summarizes authenticated-user entries only. It labels wealth as `Tracked Savings` until asset tracking exists. Goal progress uses only actual savings in the primary goal currency; no FX conversion is performed in this milestone. Entries in other currencies are shown separately.
+The dashboard summarizes authenticated-user entries, assets, and receipts only. Dashboard 2.0 shows total assets, tracked savings, cash, investments, property, crypto, business, trading accounts, asset allocation, portfolio growth, recent assets, recent receipts, latest entries, and goal progress. Goal progress and cards use only the primary goal currency; no FX conversion is performed in this milestone. Other currencies are stored and shown separately.
 
 The saving streak counts consecutive eligible positive-profit days where all entries met or exceeded target. Days with no entries, weekends, zero-profit entries, or losing entries are ignored; a positive-profit below-target day breaks the streak.
+
+## Portfolio
+
+Assets use a generic category model instead of source-specific trackers. Categories are `cash`, `investment`, `crypto`, `property`, `business`, `trading_account`, `vehicle`, and `other`. Each asset stores currency, amount fields, optional exchange-rate placeholder, institution, reference, notes, and status.
+
+Current value is updated for dashboard reads, but every value change appends an `asset_value_history` row. History rows are never overwritten by updates.
+
+## Digital Vault
+
+Vault documents and asset documents share the `vault_documents` metadata table. General vault files are stored under `data/vault/`; asset-linked files are stored under `data/assets/`. API responses include metadata such as original filename, generated encrypted filename, SHA-256/checksum, tags, and notes, but never filesystem paths.
+
+## OCR
+
+OCR jobs run against existing receipt or vault document sources. The EasyOCR adapter extracts raw text and the service parses amount, currency, date, time, and reference into `ocr_results`. Results start as `pending_review` and must be confirmed explicitly. Confirming OCR does not mutate the original receipt or document.
+
+## Search
+
+Global search is owner-scoped and searches assets, receipts, vault documents, notes, institutions, references, tags, and folder names.
 
 ## Database
 

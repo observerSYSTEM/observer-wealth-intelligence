@@ -16,6 +16,11 @@ class Settings(BaseSettings):
     login_rate_limit_window_seconds: int = 900
     receipt_max_file_size_bytes: int = 10 * 1024 * 1024
     receipt_storage_path: str = "data/receipts"
+    asset_storage_path: str = "data/assets"
+    vault_storage_path: str = "data/vault"
+    ocr_storage_path: str = "data/ocr"
+    vault_max_file_size_bytes: int = 25 * 1024 * 1024
+    easyocr_languages: list[str] = ["en"]
     database_url: str = (
         "postgresql+psycopg://observer:observer-local-password@localhost:5432/observer_wealth"
     )

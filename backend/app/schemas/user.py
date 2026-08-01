@@ -3,7 +3,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
-SUPPORTED_CURRENCIES = {"GBP", "USD", "NGN"}
+SUPPORTED_CURRENCIES = {"GBP", "USD", "NGN", "EUR"}
 SUPPORTED_ROLES = {"owner", "user"}
 
 
@@ -32,7 +32,7 @@ def validate_timezone(value: str) -> str:
 def validate_currency(value: str) -> str:
     currency = value.upper()
     if currency not in SUPPORTED_CURRENCIES:
-        raise ValueError("Currency must be GBP, USD, or NGN")
+        raise ValueError("Currency must be GBP, USD, NGN, or EUR")
     return currency
 
 

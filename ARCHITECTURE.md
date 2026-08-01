@@ -7,13 +7,18 @@ Observer Wealth Intelligence is a private FastAPI and Next.js application backed
 The backend is under `backend/app`:
 
 - `api/routes/auth.py` exposes setup, registration, login, refresh, logout, and current-user endpoints.
+- `api/routes/assets.py` exposes generic asset CRUD, asset value history, and asset document upload.
 - `api/routes/dashboard.py` exposes authenticated wealth summary data.
 - `api/routes/entries.py` exposes authenticated wealth-entry CRUD.
+- `api/routes/ocr.py` exposes OCR job creation, result reads, and explicit confirmation.
+- `api/routes/portfolio.py` exposes portfolio summary calculations.
 - `api/routes/receipts.py` exposes authenticated receipt metadata and content access.
+- `api/routes/search.py` exposes global authenticated search.
 - `api/routes/users.py` exposes authenticated profile and password operations.
+- `api/routes/vault.py` exposes digital vault folders and document operations.
 - `api/routes/settings.py` exposes authenticated settings reads and owner-only settings changes.
-- `models/` contains SQLAlchemy models for users, refresh sessions, app settings, audit logs, wealth entries, and receipts.
-- `services/` contains authentication, session, settings, audit, rate-limit, wealth-entry, dashboard, and receipt-storage logic.
+- `models/` contains SQLAlchemy models for users, refresh sessions, app settings, audit logs, wealth entries, receipts, assets, asset value history, vault documents, and OCR results.
+- `services/` contains authentication, session, settings, audit, rate-limit, wealth-entry, dashboard, receipt-storage, asset, portfolio, vault, OCR, and search logic.
 - Alembic migrations live under `backend/alembic/versions`.
 
 ## Authentication Flow
@@ -94,9 +99,50 @@ Uploads validate MIME type, extension, file signature, configured maximum size, 
 
 Each receipt can be attached to at most one wealth entry. Deleting an entry leaves receipt metadata intact. Deleting a receipt detaches it from any entry, removes the local file when present, marks the receipt deleted, and writes an audit event.
 
+## Portfolio Architecture
+
+The portfolio engine is generic. An `asset` belongs to one user, has a category, name, currency, purchase price, current value, optional exchange-rate placeholder, purchase date, institution, reference, notes, and status.
+
+Supported asset categories are:
+
+- `cash`
+- `investment`
+- `crypto`
+- `property`
+- `business`
+- `trading_account`
+- `vehicle`
+- `other`
+
+Supported statuses are `active`, `sold`, `closed`, and `archived`.
+
+Value history is append-only. Creating an asset writes the first `asset_value_history` row. Updating `current_value` through either the asset update endpoint or value-history endpoint writes a new history row with previous value, new value, currency, valuation date, source, notes, and recorded timestamp. Existing history is never rewritten.
+
+For Dashboard 2.0 and portfolio summaries, active assets in the primary goal currency are aggregated by category. Tracked savings in the primary goal currency are included in cash and total assets. Other currencies are stored and shown separately; no FX conversion is performed.
+
+## Digital Vault Architecture
+
+The digital vault uses a `vault_documents` table for metadata and local filesystem storage for file content. Folders are `receipts`, `certificates`, `passports`, `land_documents`, `company_documents`, `tax_documents`, `trading_statements`, `insurance`, and `other`.
+
+Vault documents store original filename, generated encrypted filename, media type, size, SHA-256/checksum, upload timestamp, tags, notes, and optional `asset_id`. API responses never include filesystem paths. The generated encrypted filename is a random internal name, not the user's original filename.
+
+Asset-attached documents use the same metadata table with `storage_area=asset`, and are stored under the asset storage root. General vault documents use `storage_area=vault`.
+
+## OCR Architecture
+
+OCR is a review-first foundation. Jobs run against an existing receipt or vault document. The OCR service validates ownership, reads the source file from secure storage, calls the EasyOCR adapter, extracts text, parses amount, currency, date, time, and reference, and writes an `ocr_results` row with `status=pending_review`.
+
+Confirmation is explicit through the OCR confirmation endpoint. Confirming an OCR result updates only the OCR result row. It does not mutate receipts, vault documents, entries, or assets. The original uploaded file is never overwritten.
+
+OCR extracted text artifacts are written under `data/ocr/` for recovery and debugging. The API does not expose OCR artifact filesystem paths.
+
+## Global Search
+
+Global search is owner-scoped and searches asset names, notes, institutions, references, receipt filenames, vault filenames, vault tags, vault notes, and vault folder names.
+
 ## Dashboard And Streaks
 
-Dashboard totals use `actual_savings`, not recommended savings. The primary goal progress calculation only includes entries whose currency matches `primary_goal_currency`; there is no foreign-exchange conversion in this milestone.
+Daily-savings dashboard totals use `actual_savings`, not recommended savings. Dashboard 2.0 adds total assets, cash, investments, property, crypto, business, trading accounts, asset allocation, portfolio growth, recent assets, and recent receipts. The primary goal progress calculation only includes entries and assets in `primary_goal_currency`; there is no foreign-exchange conversion in this milestone.
 
 The savings streak counts consecutive eligible saving days on which every positive-profit entry for that date met or exceeded the target. Weekends and days without entries do not automatically break the streak. Losing, zero-profit, and no-trade days are ignored. A positive-profit day with any below-target entry breaks the streak.
 

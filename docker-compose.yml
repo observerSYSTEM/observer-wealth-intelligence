@@ -30,6 +30,11 @@ services:
       CORS_ORIGINS: ${CORS_ORIGINS:-["http://localhost:3000","http://localhost:8080"]}
       RECEIPT_MAX_FILE_SIZE_BYTES: ${RECEIPT_MAX_FILE_SIZE_BYTES:-10485760}
       RECEIPT_STORAGE_PATH: ${RECEIPT_STORAGE_PATH:-data/receipts}
+      ASSET_STORAGE_PATH: ${ASSET_STORAGE_PATH:-data/assets}
+      VAULT_STORAGE_PATH: ${VAULT_STORAGE_PATH:-data/vault}
+      OCR_STORAGE_PATH: ${OCR_STORAGE_PATH:-data/ocr}
+      VAULT_MAX_FILE_SIZE_BYTES: ${VAULT_MAX_FILE_SIZE_BYTES:-26214400}
+      EASYOCR_LANGUAGES: ${EASYOCR_LANGUAGES:-["en"]}
     volumes:
       - ./data:/app/data
     depends_on:

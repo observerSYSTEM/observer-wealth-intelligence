@@ -86,6 +86,7 @@ export default function EntriesPage() {
                 <option value="GBP">GBP</option>
                 <option value="USD">USD</option>
                 <option value="NGN">NGN</option>
+                <option value="EUR">EUR</option>
               </select>
             </Field>
             <Field id="source-filter" label="Income source">

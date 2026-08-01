@@ -11,6 +11,11 @@
 | `LOGIN_RATE_LIMIT_WINDOW_SECONDS` | No | Login rate-limit window. |
 | `RECEIPT_MAX_FILE_SIZE_BYTES` | No | Maximum accepted receipt upload size. Default is 10 MiB. |
 | `RECEIPT_STORAGE_PATH` | No | Local filesystem path for receipt files. Default is `data/receipts`. |
+| `ASSET_STORAGE_PATH` | No | Local filesystem path for asset-attached documents. Default is `data/assets`. |
+| `VAULT_STORAGE_PATH` | No | Local filesystem path for digital vault documents. Default is `data/vault`. |
+| `OCR_STORAGE_PATH` | No | Local filesystem path for OCR text artifacts. Default is `data/ocr`. |
+| `VAULT_MAX_FILE_SIZE_BYTES` | No | Maximum accepted digital-vault upload size. Default is 25 MiB. |
+| `EASYOCR_LANGUAGES` | No | JSON list of EasyOCR language codes. Default is `["en"]`. |
 | `COOKIE_SECURE` | Production HTTPS | Forces auth cookies to use the Secure flag. |
 | `COOKIE_SAMESITE` | No | Auth cookie SameSite policy. |
 | `DATABASE_URL` | Yes | SQLAlchemy PostgreSQL connection string. |
@@ -22,4 +27,4 @@
 | `BACKUP_DIR` | No | Directory used by backup script. |
 | `INCLUDE_SECRETS_IN_BACKUP` | No | Includes `.env` in backup archives only when set to `true`. Use encrypted storage. |
 
-Receipt files should be stored on persistent disk. PostgreSQL backups do not include receipt bytes; the backup script copies `RECEIPT_STORAGE_PATH` separately.
+Uploaded files and OCR artifacts should be stored on persistent disk. PostgreSQL backups do not include file bytes; the backup script copies `RECEIPT_STORAGE_PATH`, `ASSET_STORAGE_PATH`, `VAULT_STORAGE_PATH`, and `OCR_STORAGE_PATH` separately.

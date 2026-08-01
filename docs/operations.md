@@ -24,6 +24,9 @@ The archive includes:
 
 - A PostgreSQL custom-format dump.
 - Receipt files from `RECEIPT_STORAGE_PATH` when the directory exists.
+- Asset documents from `ASSET_STORAGE_PATH` when the directory exists.
+- Vault documents from `VAULT_STORAGE_PATH` when the directory exists.
+- OCR text artifacts from `OCR_STORAGE_PATH` when the directory exists.
 - Non-secret recovery configuration, including Compose overlays, Docker config, deployment scripts, systemd config, database config, and `.env.example`.
 - A manifest and `SHA256SUMS` file when checksum tooling is available.
 
@@ -36,7 +39,7 @@ cd extracted-backup-directory
 sha256sum -c SHA256SUMS
 ```
 
-Receipt files live outside PostgreSQL, so a complete recovery requires both the database dump and the receipt directory captured in the archive.
+Uploaded files and OCR artifacts live outside PostgreSQL, so a complete recovery requires the database dump plus the receipt, asset, vault, and OCR directories captured in the archive.
 
 ## Updates
 

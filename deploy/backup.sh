@@ -12,6 +12,9 @@ BACKUP_DIR="${BACKUP_DIR:-./backups}"
 POSTGRES_DB="${POSTGRES_DB:-observer_wealth}"
 POSTGRES_USER="${POSTGRES_USER:-observer}"
 RECEIPT_STORAGE_PATH="${RECEIPT_STORAGE_PATH:-data/receipts}"
+ASSET_STORAGE_PATH="${ASSET_STORAGE_PATH:-data/assets}"
+VAULT_STORAGE_PATH="${VAULT_STORAGE_PATH:-data/vault}"
+OCR_STORAGE_PATH="${OCR_STORAGE_PATH:-data/ocr}"
 INCLUDE_SECRETS_IN_BACKUP="${INCLUDE_SECRETS_IN_BACKUP:-false}"
 STAMP="$(date -u +%Y%m%d-%H%M%S)"
 OUTPUT_DIR="${BACKUP_DIR%/}/${STAMP}"
@@ -37,6 +40,21 @@ if [ -d "$RECEIPT_STORAGE_PATH" ]; then
   cp -R "$RECEIPT_STORAGE_PATH"/. "$OUTPUT_DIR/receipts/"
 fi
 
+if [ -d "$ASSET_STORAGE_PATH" ]; then
+  mkdir -p "$OUTPUT_DIR/assets"
+  cp -R "$ASSET_STORAGE_PATH"/. "$OUTPUT_DIR/assets/"
+fi
+
+if [ -d "$VAULT_STORAGE_PATH" ]; then
+  mkdir -p "$OUTPUT_DIR/vault"
+  cp -R "$VAULT_STORAGE_PATH"/. "$OUTPUT_DIR/vault/"
+fi
+
+if [ -d "$OCR_STORAGE_PATH" ]; then
+  mkdir -p "$OUTPUT_DIR/ocr"
+  cp -R "$OCR_STORAGE_PATH"/. "$OUTPUT_DIR/ocr/"
+fi
+
 if [ "$INCLUDE_SECRETS_IN_BACKUP" = "true" ] && [ -f .env ]; then
   cp .env "$OUTPUT_DIR/config/.env"
 else
@@ -49,7 +67,7 @@ fi
 cat > "$OUTPUT_DIR/MANIFEST.txt" <<EOF
 Observer Wealth Intelligence backup
 Created UTC: ${STAMP}
-Includes: PostgreSQL dump, receipt files when present, non-secret deployment configuration.
+Includes: PostgreSQL dump, receipt files, asset files, vault files, OCR artifacts when present, non-secret deployment configuration.
 Secrets included: ${INCLUDE_SECRETS_IN_BACKUP}
 EOF
 

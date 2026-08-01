@@ -1,6 +1,16 @@
 "use client";
 
-import { FileText, LayoutDashboard, LogOut, ReceiptText, Settings, UserRound } from "lucide-react";
+import {
+  BriefcaseBusiness,
+  ChartPie,
+  FileText,
+  FolderArchive,
+  LayoutDashboard,
+  LogOut,
+  ReceiptText,
+  Settings,
+  UserRound
+} from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
@@ -34,6 +44,27 @@ export function AppFrame({ children }: { children: ReactNode }) {
               className="grid h-10 w-10 place-items-center rounded-md border border-black/10 bg-white shadow-sm transition hover:bg-mist dark:border-white/10 dark:bg-white/10 dark:hover:bg-white/15"
             >
               <FileText className="h-5 w-5" aria-hidden="true" />
+            </Link>
+            <Link
+              href="/portfolio"
+              title="Portfolio"
+              className="grid h-10 w-10 place-items-center rounded-md border border-black/10 bg-white shadow-sm transition hover:bg-mist dark:border-white/10 dark:bg-white/10 dark:hover:bg-white/15"
+            >
+              <ChartPie className="h-5 w-5" aria-hidden="true" />
+            </Link>
+            <Link
+              href="/assets"
+              title="Assets"
+              className="grid h-10 w-10 place-items-center rounded-md border border-black/10 bg-white shadow-sm transition hover:bg-mist dark:border-white/10 dark:bg-white/10 dark:hover:bg-white/15"
+            >
+              <BriefcaseBusiness className="h-5 w-5" aria-hidden="true" />
+            </Link>
+            <Link
+              href="/vault"
+              title="Digital vault"
+              className="grid h-10 w-10 place-items-center rounded-md border border-black/10 bg-white shadow-sm transition hover:bg-mist dark:border-white/10 dark:bg-white/10 dark:hover:bg-white/15"
+            >
+              <FolderArchive className="h-5 w-5" aria-hidden="true" />
             </Link>
             <Link
               href="/receipts"

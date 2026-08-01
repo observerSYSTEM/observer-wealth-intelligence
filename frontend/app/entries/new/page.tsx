@@ -157,6 +157,7 @@ export default function NewEntryPage() {
                   <option value="GBP">GBP</option>
                   <option value="USD">USD</option>
                   <option value="NGN">NGN</option>
+                  <option value="EUR">EUR</option>
                 </select>
               </Field>
               <Field id="income-source" label="Income source">
