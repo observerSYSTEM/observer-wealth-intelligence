@@ -7,6 +7,11 @@ type ApiFetchOptions = {
   retryOnUnauthorized?: boolean;
 };
 
+type CachedPayload<T> = {
+  storedAt: string;
+  value: T;
+};
+
 export class ApiError extends Error {
   status: number;
   detail: string;
@@ -16,6 +21,63 @@ export class ApiError extends Error {
     this.name = "ApiError";
     this.status = status;
     this.detail = detail;
+  }
+}
+
+const offlineCachePrefix = "owi:offline:";
+const cacheableReadPrefixes = [
+  "/api/v1/dashboard/summary",
+  "/api/v1/goals",
+  "/api/v1/timeline",
+  "/api/v1/portfolio/summary",
+  "/api/v1/assets",
+  "/api/v1/receipts",
+  "/api/v1/vault",
+  "/api/v1/notifications"
+];
+
+function canUseBrowserStorage() {
+  return typeof window !== "undefined" && typeof window.localStorage !== "undefined";
+}
+
+function isOffline() {
+  return typeof navigator !== "undefined" && navigator.onLine === false;
+}
+
+function cacheKey(path: string) {
+  return `${offlineCachePrefix}${path}`;
+}
+
+function isCacheableRead(path: string, method: string) {
+  return method === "GET" && cacheableReadPrefixes.some((prefix) => path.startsWith(prefix));
+}
+
+function readCached<T>(path: string): T | null {
+  if (!canUseBrowserStorage()) return null;
+  const raw = window.localStorage.getItem(cacheKey(path));
+  if (!raw) return null;
+  try {
+    return (JSON.parse(raw) as CachedPayload<T>).value;
+  } catch {
+    window.localStorage.removeItem(cacheKey(path));
+    return null;
+  }
+}
+
+function writeCached<T>(path: string, value: T) {
+  if (!canUseBrowserStorage()) return;
+  window.localStorage.setItem(
+    cacheKey(path),
+    JSON.stringify({ storedAt: new Date().toISOString(), value } satisfies CachedPayload<T>)
+  );
+}
+
+export function clearOfflineCache() {
+  if (!canUseBrowserStorage()) return;
+  for (const key of Object.keys(window.localStorage)) {
+    if (key.startsWith(offlineCachePrefix)) {
+      window.localStorage.removeItem(key);
+    }
   }
 }
 
@@ -61,6 +123,16 @@ export async function apiFetch<T>(
   const retryOnUnauthorized = options.retryOnUnauthorized ?? true;
   const headers = new Headers(init.headers);
   const method = (init.method ?? "GET").toUpperCase();
+  const cacheable = isCacheableRead(path, method);
+
+  if (!["GET", "HEAD", "OPTIONS"].includes(method) && isOffline()) {
+    throw new ApiError(0, "You are offline. Reconnect before changing private data.");
+  }
+
+  if (cacheable && isOffline()) {
+    const cached = readCached<T>(path);
+    if (cached !== null) return cached;
+  }
 
   headers.set("Accept", "application/json");
   if (init.body && !(init.body instanceof FormData) && !headers.has("Content-Type")) {
@@ -72,12 +144,24 @@ export async function apiFetch<T>(
     headers.set("X-CSRF-Token", csrf);
   }
 
-  const response = await fetch(`${apiBaseUrl}${path}`, {
-    ...init,
-    method,
-    headers,
-    credentials: "include"
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${apiBaseUrl}${path}`, {
+      ...init,
+      method,
+      headers,
+      credentials: "include"
+    });
+  } catch (error) {
+    if (process.env.NODE_ENV === "development") {
+      console.warn("OWI API network failure", { path, method, error });
+    }
+    if (cacheable) {
+      const cached = readCached<T>(path);
+      if (cached !== null) return cached;
+    }
+    throw new ApiError(0, "Network request failed. Check the backend connection.");
+  }
 
   if (response.status === 401 && retryOnUnauthorized && path !== "/api/v1/auth/refresh") {
     const refreshed = await refreshSession();
@@ -94,7 +178,9 @@ export async function apiFetch<T>(
   if (response.status === 204) {
     return undefined as T;
   }
-  return (await response.json()) as T;
+  const payload = (await response.json()) as T;
+  if (cacheable) writeCached(path, payload);
+  return payload;
 }
 
 export async function apiBlob(path: string): Promise<Blob> {

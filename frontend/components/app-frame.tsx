@@ -1,20 +1,26 @@
 "use client";
 
 import {
+  Bell,
   BriefcaseBusiness,
   ChartPie,
+  Clock3,
+  DatabaseBackup,
   FileText,
   FolderArchive,
   LayoutDashboard,
   LogOut,
   ReceiptText,
+  ScanText,
   Settings,
+  Target,
   UserRound
 } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { useAuth } from "@/components/auth-provider";
+import { ConnectionStatus } from "@/components/connection-status";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 export function AppFrame({ children }: { children: ReactNode }) {
@@ -53,6 +59,13 @@ export function AppFrame({ children }: { children: ReactNode }) {
               <ChartPie className="h-5 w-5" aria-hidden="true" />
             </Link>
             <Link
+              href="/goals"
+              title="Goals"
+              className="grid h-10 w-10 place-items-center rounded-md border border-black/10 bg-white shadow-sm transition hover:bg-mist dark:border-white/10 dark:bg-white/10 dark:hover:bg-white/15"
+            >
+              <Target className="h-5 w-5" aria-hidden="true" />
+            </Link>
+            <Link
               href="/assets"
               title="Assets"
               className="grid h-10 w-10 place-items-center rounded-md border border-black/10 bg-white shadow-sm transition hover:bg-mist dark:border-white/10 dark:bg-white/10 dark:hover:bg-white/15"
@@ -74,6 +87,27 @@ export function AppFrame({ children }: { children: ReactNode }) {
               <ReceiptText className="h-5 w-5" aria-hidden="true" />
             </Link>
             <Link
+              href="/ocr"
+              title="OCR review"
+              className="grid h-10 w-10 place-items-center rounded-md border border-black/10 bg-white shadow-sm transition hover:bg-mist dark:border-white/10 dark:bg-white/10 dark:hover:bg-white/15"
+            >
+              <ScanText className="h-5 w-5" aria-hidden="true" />
+            </Link>
+            <Link
+              href="/timeline"
+              title="Timeline"
+              className="grid h-10 w-10 place-items-center rounded-md border border-black/10 bg-white shadow-sm transition hover:bg-mist dark:border-white/10 dark:bg-white/10 dark:hover:bg-white/15"
+            >
+              <Clock3 className="h-5 w-5" aria-hidden="true" />
+            </Link>
+            <Link
+              href="/notifications"
+              title="Notifications"
+              className="grid h-10 w-10 place-items-center rounded-md border border-black/10 bg-white shadow-sm transition hover:bg-mist dark:border-white/10 dark:bg-white/10 dark:hover:bg-white/15"
+            >
+              <Bell className="h-5 w-5" aria-hidden="true" />
+            </Link>
+            <Link
               href="/profile"
               title="Profile"
               className="grid h-10 w-10 place-items-center rounded-md border border-black/10 bg-white shadow-sm transition hover:bg-mist dark:border-white/10 dark:bg-white/10 dark:hover:bg-white/15"
@@ -81,14 +115,24 @@ export function AppFrame({ children }: { children: ReactNode }) {
               <UserRound className="h-5 w-5" aria-hidden="true" />
             </Link>
             {user?.role === "owner" ? (
-              <Link
-                href="/settings"
-                title="Settings"
-                className="grid h-10 w-10 place-items-center rounded-md border border-black/10 bg-white shadow-sm transition hover:bg-mist dark:border-white/10 dark:bg-white/10 dark:hover:bg-white/15"
-              >
-                <Settings className="h-5 w-5" aria-hidden="true" />
-              </Link>
+              <>
+                <Link
+                  href="/automation"
+                  title="Automation"
+                  className="grid h-10 w-10 place-items-center rounded-md border border-black/10 bg-white shadow-sm transition hover:bg-mist dark:border-white/10 dark:bg-white/10 dark:hover:bg-white/15"
+                >
+                  <DatabaseBackup className="h-5 w-5" aria-hidden="true" />
+                </Link>
+                <Link
+                  href="/settings"
+                  title="Settings"
+                  className="grid h-10 w-10 place-items-center rounded-md border border-black/10 bg-white shadow-sm transition hover:bg-mist dark:border-white/10 dark:bg-white/10 dark:hover:bg-white/15"
+                >
+                  <Settings className="h-5 w-5" aria-hidden="true" />
+                </Link>
+              </>
             ) : null}
+            <ConnectionStatus />
             <ThemeToggle />
             <button
               type="button"

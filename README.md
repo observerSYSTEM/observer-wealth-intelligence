@@ -1,6 +1,6 @@
 # Observer Wealth Intelligence
 
-Observer Wealth Intelligence is a private wealth tracking system designed for local-first deployment, including Raspberry Pi hosting. The current build includes the clean FastAPI/Next.js architecture, private-user authentication, profile management, owner settings, daily wealth entries, allocation tracking, portfolio assets, append-only value history, a digital vault, OCR review foundations, and Dashboard 2.0.
+Observer Wealth Intelligence is a private wealth tracking system designed for local-first deployment, including Raspberry Pi hosting. The current build includes the clean FastAPI/Next.js architecture, private-user authentication, profile management, owner settings, daily wealth entries, portfolio assets, append-only value history, a digital vault, real local OCR review, multiple financial goals, notifications, scheduled backup records, a unified wealth timeline, installable PWA support, and Dashboard 3.0.
 
 ## Architecture
 
@@ -20,9 +20,9 @@ Default allocation is 50% savings, 30% business, and 20% living. For a `GBP 300.
 
 Actual savings are the source of truth for totals. Saving above the recommended target counts in full. Zero-profit and negative-profit entries do not create a savings obligation and do not harm discipline scores or streaks.
 
-## Dashboard
+## Dashboard 3.0
 
-The dashboard uses authenticated-user data only. It shows total assets, tracked savings, cash, investments, property, crypto, business, trading accounts, goal progress, asset allocation, portfolio growth, recent assets, recent receipts, latest entries, and daily savings.
+The dashboard uses authenticated-user data only. It shows total assets, tracked savings, cash, investments, property, crypto, business, trading accounts, goal progress, active goals, pending OCR reviews, unread notifications, latest backup verification, asset allocation, portfolio growth, recent assets, recent receipts, latest entries, recent timeline events, and daily savings.
 
 Goal progress and portfolio cards use the configured primary goal currency only. The app does not perform foreign-exchange conversion yet, so values in other currencies are stored and shown separately.
 
@@ -36,7 +36,15 @@ Every asset value change appends an `asset_value_history` row. The latest asset 
 
 The digital vault stores metadata in PostgreSQL and file content on local disk. Supported folders are receipts, certificates, passports, land documents, company documents, tax documents, trading statements, insurance, and other. Documents support upload, preview, download, delete, tags, notes, and search.
 
-OCR uses an EasyOCR service adapter. OCR jobs run against existing receipts or vault documents, store extracted text and parsed amount/date/time/reference as separate pending-review rows, and require user confirmation before the OCR result is marked confirmed. OCR never overwrites the original uploaded file.
+OCR uses an EasyOCR worker. OCR jobs run against existing receipts or vault documents, store extracted text, confidence scores, amount candidates, and parsed amount/date/time/reference/recipient/sender as separate review rows, and require user confirmation before the OCR result is marked confirmed. OCR never overwrites the original uploaded file.
+
+## Goals, Timeline, Notifications, And Backups
+
+Users can track multiple financial goals in supported currencies. Goals support deadlines, progress sources, a single active primary goal, and append-only contributions. The unified timeline aggregates real entries, assets, value changes, receipts, vault documents, OCR results, goals, contributions, notifications, and backup runs.
+
+Notifications are stored in-app. Telegram delivery is optional and disabled by default until `TELEGRAM_NOTIFICATIONS_ENABLED`, `TELEGRAM_BOT_TOKEN`, and `TELEGRAM_CHAT_ID` are configured.
+
+Owner-only backup endpoints manage backup settings, manual backup runs, dry runs, and restore verification. API-created backups write ZIP archives under `data/backups`, include a manifest, and verify file checksums. The Raspberry Pi systemd timer runs `deploy/backup.sh`, which creates PostgreSQL dump backups. `deploy/restore.sh` verifies archives and requires explicit confirmation before live restore.
 
 ## Receipt Vault
 
@@ -54,7 +62,7 @@ data/
   vault/
   receipts/
   ocr/
-backups/
+  backups/
 ```
 
 Backups include the database dump, receipt files, asset files, vault files, OCR artifacts, and non-secret recovery configuration.

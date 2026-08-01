@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, Eye, Trash2, Upload } from "lucide-react";
+import { Download, Eye, ScanText, Trash2, Upload } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -9,7 +9,7 @@ import { Field, FormMessage, inputClass } from "@/components/form-shell";
 import { ProtectedRoute } from "@/components/protected-route";
 import { apiBaseUrl, apiBlob, apiFetch, errorMessage } from "@/lib/api";
 import { formatFileSize } from "@/lib/format";
-import type { Receipt, ReceiptList } from "@/types/finance";
+import type { OCRResult, Receipt, ReceiptList } from "@/types/finance";
 
 export default function ReceiptsPage() {
   const [receipts, setReceipts] = useState<Receipt[]>([]);
@@ -19,6 +19,7 @@ export default function ReceiptsPage() {
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [ocrProcessingId, setOcrProcessingId] = useState<string | null>(null);
 
   async function loadReceipts() {
     const data = await apiFetch<ReceiptList>("/api/v1/receipts");
@@ -82,6 +83,23 @@ export default function ReceiptsPage() {
     if (!window.confirm("Delete this receipt?")) return;
     await apiFetch(`/api/v1/receipts/${receiptId}`, { method: "DELETE" });
     setReceipts((current) => current.filter((receipt) => receipt.id !== receiptId));
+  }
+
+  async function runReceiptOCR(receipt: Receipt) {
+    setOcrProcessingId(receipt.id);
+    setError(null);
+    setMessage(null);
+    try {
+      await apiFetch<OCRResult>("/api/v1/ocr/jobs", {
+        method: "POST",
+        body: JSON.stringify({ source_type: "receipt", source_id: receipt.id })
+      });
+      setMessage("OCR review ready.");
+    } catch (ocrError) {
+      setError(errorMessage(ocrError));
+    } finally {
+      setOcrProcessingId(null);
+    }
   }
 
   return (
@@ -184,6 +202,15 @@ export default function ReceiptsPage() {
                     className="grid h-9 w-9 place-items-center rounded-md border border-black/10 hover:bg-mist dark:border-white/10 dark:hover:bg-white/10"
                   >
                     <Trash2 className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                  <button
+                    type="button"
+                    title="Run OCR"
+                    disabled={ocrProcessingId === receipt.id}
+                    onClick={() => void runReceiptOCR(receipt)}
+                    className="grid h-9 w-9 place-items-center rounded-md border border-black/10 hover:bg-mist disabled:opacity-60 dark:border-white/10 dark:hover:bg-white/10"
+                  >
+                    <ScanText className="h-4 w-4" aria-hidden="true" />
                   </button>
                 </div>
               </article>

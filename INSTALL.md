@@ -24,13 +24,25 @@ RECEIPT_MAX_FILE_SIZE_BYTES=10485760
 ASSET_STORAGE_PATH=data/assets
 VAULT_STORAGE_PATH=data/vault
 OCR_STORAGE_PATH=data/ocr
+BACKUP_STORAGE_PATH=data/backups
 VAULT_MAX_FILE_SIZE_BYTES=26214400
 EASYOCR_LANGUAGES=["en"]
+OCR_LOW_CONFIDENCE_THRESHOLD=70
+OCR_PDF_PAGE_LIMIT=3
+OCR_PDF_RENDER_DPI=150
+OCR_IMAGE_MAX_PIXELS=20000000
+OCR_MAX_RETRIES=3
+OCR_WORKER_POLL_SECONDS=5
+TELEGRAM_NOTIFICATIONS_ENABLED=false
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_CHAT_ID=
+BACKUP_SCHEDULE_ENABLED=false
+BACKUP_SCHEDULE_TIME=02:30
 ```
 
 Keep these storage paths on persistent disk and size them for payment screenshots, PDFs, asset documents, vault documents, OCR text artifacts, and backups. On Raspberry Pi deployments, prefer an SD card or external disk with enough spare capacity for the database volume, uploaded files, OCR output, and backup archives.
 
-The OCR foundation uses EasyOCR and PyMuPDF. The OCR API loads these libraries only when an OCR job runs, but production images install them through `backend/requirements.txt`.
+The OCR foundation uses EasyOCR, PyMuPDF, and Pillow. Compose runs OCR in the separate `ocr-worker` service so API uploads stay responsive while documents are processed locally.
 
 For HTTPS production deployments, set:
 
@@ -91,10 +103,27 @@ sudo journalctl -u observer-wealth-intelligence -f
 ```
 
 Backups are written to `backups/` and include a PostgreSQL custom-format dump.
+The default backup directory is `data/backups/`; `BACKUP_DIR` can override the shell script destination.
 
 Backups also include receipt files, asset files, vault files, OCR artifacts, and non-secret recovery configuration. The `.env` file is excluded by default; set `INCLUDE_SECRETS_IN_BACKUP=true` only when writing to encrypted storage and you intentionally want secrets inside the archive.
 
 Each backup archive includes a `SHA256SUMS` file when checksum tooling is available, and the script verifies that the compressed archive can be listed before it reports success.
+
+Restore verification without writing over live data:
+
+```bash
+./deploy/verify-backup.sh data/backups/<backup-file>.tar.gz
+./deploy/restore.sh data/backups/<backup-file>.tar.gz --verify-only
+./deploy/restore.sh data/backups/<backup-file>.tar.gz --dry-run
+```
+
+Live restore requires explicit confirmation:
+
+```bash
+./deploy/restore.sh data/backups/<backup-file>.tar.gz --confirm-restore
+```
+
+On Raspberry Pi installs, `observer-wealth-backup.timer` runs the backup service daily at 02:30 unless you edit the timer or disable it with systemd.
 
 ## Update
 

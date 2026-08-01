@@ -10,6 +10,14 @@ erDiagram
   users ||--o{ asset_value_history : owns
   users ||--o{ vault_documents : owns
   users ||--o{ ocr_results : owns
+  users ||--o{ financial_goals : owns
+  users ||--o{ goal_contributions : owns
+  users ||--o{ notifications : owns
+  users ||--o| notification_preferences : configures
+  users ||--o{ automation_jobs : owns
+  users ||--o| backup_settings : configures
+  users ||--o{ backup_runs : owns
+  users ||--o{ timeline_events : records
 
   app_settings {
     string id PK
@@ -101,13 +109,116 @@ erDiagram
     date document_date
     string document_time
     string reference
+    string recipient
+    string sender
+    text extracted_fields_json
+    text amount_candidates_json
+    string engine_name
+    integer retry_count
     numeric confidence_score
     string status
+  }
+
+  financial_goals {
+    string id PK
+    string user_id FK
+    string name
+    string description
+    string category
+    string currency
+    numeric target_amount
+    numeric starting_amount
+    numeric current_amount
+    date deadline
+    string progress_source
+    boolean is_primary
+    string status
+    datetime completed_at
+    datetime archived_at
+  }
+
+  goal_contributions {
+    string id PK
+    string goal_id FK
+    string user_id FK
+    numeric amount
+    string currency
+    date contribution_date
+    string source_type
+    string source_id
+  }
+
+  notifications {
+    string id PK
+    string user_id FK
+    string title
+    string type
+    string channel
+    string status
+    string deduplication_key
+    datetime created_at
+  }
+
+  notification_preferences {
+    string id PK
+    string user_id FK
+    boolean telegram_enabled
+    boolean daily_reminder_enabled
+    string daily_reminder_time
+    boolean weekly_summary_enabled
+    boolean goal_alerts_enabled
+    boolean ocr_alerts_enabled
+    boolean backup_alerts_enabled
+  }
+
+  automation_jobs {
+    string id PK
+    string user_id FK
+    string job_type
+    boolean enabled
+    string cadence
+    string run_at_time
+    datetime next_run_at
+  }
+
+  backup_runs {
+    string id PK
+    string user_id FK
+    string job_id FK
+    string trigger
+    string status
+    string backup_filename
+    string sha256
+    boolean restore_verified
+  }
+
+  backup_settings {
+    string id PK
+    string user_id FK
+    boolean enabled
+    string frequency
+    string run_time
+    integer retention_daily
+    integer retention_weekly
+    integer retention_monthly
+    string backup_path
+  }
+
+  timeline_events {
+    string id PK
+    string user_id FK
+    string event_type
+    string title
+    datetime occurred_at
+    string entity_type
+    string entity_id
   }
 
   assets ||--o{ asset_value_history : records
   assets ||--o{ vault_documents : contains
   receipts ||--o| wealth_entries : attaches
+  financial_goals ||--o{ goal_contributions : records
+  automation_jobs ||--o{ backup_runs : creates
 ```
 
 `ocr_results.source_id` points to either `receipts.id` or `vault_documents.id` according to `source_type`. This is intentionally not a database foreign key because the OCR foundation supports more source types later without rewriting the table.

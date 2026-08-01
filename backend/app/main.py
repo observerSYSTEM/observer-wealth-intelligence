@@ -4,13 +4,19 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.routes import (
     assets,
     auth,
+    automation,
+    backups,
     dashboard,
     entries,
+    goals,
     health,
+    notification_preferences,
+    notifications,
     ocr,
     portfolio,
     receipts,
     search,
+    timeline,
     users,
     vault,
 )
@@ -33,6 +39,7 @@ def create_app() -> FastAPI:
     app.include_router(auth.router, prefix=f"{settings.api_v1_prefix}/auth", tags=["auth"])
     app.include_router(users.router, prefix=f"{settings.api_v1_prefix}/users", tags=["users"])
     app.include_router(assets.router, prefix=f"{settings.api_v1_prefix}/assets", tags=["assets"])
+    app.include_router(goals.router, prefix=f"{settings.api_v1_prefix}/goals", tags=["goals"])
     app.include_router(entries.router, prefix=f"{settings.api_v1_prefix}/entries", tags=["entries"])
     app.include_router(
         receipts.router,
@@ -50,6 +57,27 @@ def create_app() -> FastAPI:
         portfolio.router,
         prefix=f"{settings.api_v1_prefix}/portfolio",
         tags=["portfolio"],
+    )
+    app.include_router(
+        notifications.router,
+        prefix=f"{settings.api_v1_prefix}/notifications",
+        tags=["notifications"],
+    )
+    app.include_router(
+        automation.router,
+        prefix=f"{settings.api_v1_prefix}/automation",
+        tags=["automation"],
+    )
+    app.include_router(backups.router, prefix=f"{settings.api_v1_prefix}/backups", tags=["backups"])
+    app.include_router(
+        notification_preferences.router,
+        prefix=f"{settings.api_v1_prefix}/notification-preferences",
+        tags=["notification-preferences"],
+    )
+    app.include_router(
+        timeline.router,
+        prefix=f"{settings.api_v1_prefix}/timeline",
+        tags=["timeline"],
     )
     app.include_router(search.router, prefix=f"{settings.api_v1_prefix}/search", tags=["search"])
     app.include_router(

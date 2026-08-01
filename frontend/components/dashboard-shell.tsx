@@ -3,13 +3,17 @@
 import {
   Banknote,
   BarChart3,
+  Bell,
   BriefcaseBusiness,
   Building2,
+  Clock3,
   Coins,
+  DatabaseBackup,
   Landmark,
   LineChart,
   PiggyBank,
   ReceiptText,
+  ScanText,
   Target
 } from "lucide-react";
 import Link from "next/link";
@@ -56,6 +60,9 @@ export function DashboardShell() {
             <Link href="/assets/new" className="rounded-md bg-moss px-4 py-2.5 text-sm font-semibold text-white">
               New asset
             </Link>
+            <Link href="/goals/new" className="rounded-md border border-black/10 px-4 py-2.5 text-sm font-semibold dark:border-white/10">
+              New goal
+            </Link>
             <Link href="/entries/new" className="rounded-md border border-black/10 px-4 py-2.5 text-sm font-semibold dark:border-white/10">
               New entry
             </Link>
@@ -88,6 +95,14 @@ function DashboardContent({ summary }: { summary: DashboardSummary }) {
         <MetricCard icon={<Coins className="h-5 w-5" />} label="Crypto" value={formatMoney(summary.crypto, currency)} />
         <MetricCard icon={<BriefcaseBusiness className="h-5 w-5" />} label="Business" value={formatMoney(summary.business, currency)} />
         <MetricCard icon={<BarChart3 className="h-5 w-5" />} label="Trading Accounts" value={formatMoney(summary.trading_accounts, currency)} />
+        <MetricCard icon={<Target className="h-5 w-5" />} label="Active Goals" value={String(summary.active_goals.length)} />
+        <MetricCard icon={<ScanText className="h-5 w-5" />} label="OCR Reviews" value={String(summary.pending_ocr_reviews)} />
+        <MetricCard icon={<Bell className="h-5 w-5" />} label="Alerts To Read" value={String(summary.unread_notifications)} />
+        <MetricCard
+          icon={<DatabaseBackup className="h-5 w-5" />}
+          label="Latest Backup"
+          value={summary.latest_backup?.restore_verified ? "Verified" : summary.latest_backup?.status ?? "None"}
+        />
       </section>
 
       <section className="grid gap-4 lg:grid-cols-[1fr_0.75fr]">
@@ -123,6 +138,19 @@ function DashboardContent({ summary }: { summary: DashboardSummary }) {
       </section>
 
       <section className="grid gap-4 xl:grid-cols-3">
+        <Panel title="Active Goals">
+          <div className="space-y-2">
+            {summary.active_goals.map((goal) => (
+              <Link key={goal.id} href={`/goals/${goal.id}`} className="block rounded-md border border-black/10 p-3 text-sm hover:bg-mist dark:border-white/10 dark:hover:bg-white/10">
+                <span className="font-medium">{goal.name}</span>
+                <span className="mt-1 block text-black/60 dark:text-white/60">
+                  {formatPercent(goal.progress_percentage)} of {formatMoney(goal.target_amount, goal.currency)}
+                </span>
+              </Link>
+            ))}
+            {!summary.active_goals.length ? <EmptyState message="No active goals yet." /> : null}
+          </div>
+        </Panel>
         <Panel title="Recent Assets">
           <div className="space-y-2">
             {summary.recent_assets.map((asset) => (
@@ -154,6 +182,38 @@ function DashboardContent({ summary }: { summary: DashboardSummary }) {
               </Link>
             ))}
             {!summary.latest_entries.length ? <EmptyState message="No entries yet." /> : null}
+          </div>
+        </Panel>
+      </section>
+
+      <section className="grid gap-4 lg:grid-cols-2">
+        <Panel title="Recent Notifications">
+          <div className="space-y-2">
+            {summary.recent_notifications.map((notification) => (
+              <Link key={notification.id} href="/notifications" className="block rounded-md border border-black/10 p-3 text-sm hover:bg-mist dark:border-white/10 dark:hover:bg-white/10">
+                <span className="font-medium">{notification.title}</span>
+                <span className="mt-1 block text-black/60 dark:text-white/60">
+                  {statusLabel(notification.status)}
+                </span>
+              </Link>
+            ))}
+            {!summary.recent_notifications.length ? <EmptyState message="No notifications yet." /> : null}
+          </div>
+        </Panel>
+        <Panel title="Timeline">
+          <div className="space-y-2">
+            {summary.recent_timeline.map((item) => (
+              <Link key={item.id} href="/timeline" className="block rounded-md border border-black/10 p-3 text-sm hover:bg-mist dark:border-white/10 dark:hover:bg-white/10">
+                <span className="font-medium">{item.title}</span>
+                <span className="mt-1 flex flex-wrap items-center justify-between gap-3 text-black/60 dark:text-white/60">
+                  <span>{new Date(item.occurred_at).toLocaleDateString("en-GB")}</span>
+                  {item.amount && item.currency ? (
+                    <span>{formatMoney(item.amount, item.currency)}</span>
+                  ) : null}
+                </span>
+              </Link>
+            ))}
+            {!summary.recent_timeline.length ? <EmptyState message="No timeline events yet." /> : null}
           </div>
         </Panel>
       </section>

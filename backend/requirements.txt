@@ -10,3 +10,4 @@ argon2-cffi==25.1.0
 python-multipart==0.0.20
 easyocr==1.7.2
 PyMuPDF==1.24.14
+Pillow==10.4.0

@@ -57,7 +57,7 @@ def refresh_access_token(
     if user is None:
         raise RuntimeError("Refresh session user disappeared during token rotation")
     return AuthSessionRead(
-        user=user,
+        user=UserRead.model_validate(user, from_attributes=True),
         access_token_expires_at=issued_session.access_token_expires_at,
     )
 
@@ -84,5 +84,5 @@ def logout(
 
 
 @router.get("/me", response_model=UserRead)
-def read_current_user(current_user: User = Depends(get_current_user)) -> User:
-    return current_user
+def read_current_user(current_user: User = Depends(get_current_user)) -> UserRead:
+    return UserRead.model_validate(current_user, from_attributes=True)

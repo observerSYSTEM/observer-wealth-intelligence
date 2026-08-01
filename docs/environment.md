@@ -14,8 +14,14 @@
 | `ASSET_STORAGE_PATH` | No | Local filesystem path for asset-attached documents. Default is `data/assets`. |
 | `VAULT_STORAGE_PATH` | No | Local filesystem path for digital vault documents. Default is `data/vault`. |
 | `OCR_STORAGE_PATH` | No | Local filesystem path for OCR text artifacts. Default is `data/ocr`. |
+| `BACKUP_STORAGE_PATH` | No | Local filesystem path for API-created backup archives. Default is `data/backups`. |
 | `VAULT_MAX_FILE_SIZE_BYTES` | No | Maximum accepted digital-vault upload size. Default is 25 MiB. |
 | `EASYOCR_LANGUAGES` | No | JSON list of EasyOCR language codes. Default is `["en"]`. |
+| `TELEGRAM_NOTIFICATIONS_ENABLED` | No | Enables optional Telegram sends when set to `true`. |
+| `TELEGRAM_BOT_TOKEN` | Telegram only | Telegram bot token for optional notifications. |
+| `TELEGRAM_CHAT_ID` | Telegram only | Telegram chat id for optional notifications. |
+| `BACKUP_SCHEDULE_ENABLED` | No | Initial scheduled backup job state. |
+| `BACKUP_SCHEDULE_TIME` | No | Initial backup schedule time in `HH:MM`. |
 | `COOKIE_SECURE` | Production HTTPS | Forces auth cookies to use the Secure flag. |
 | `COOKIE_SAMESITE` | No | Auth cookie SameSite policy. |
 | `DATABASE_URL` | Yes | SQLAlchemy PostgreSQL connection string. |
@@ -27,4 +33,4 @@
 | `BACKUP_DIR` | No | Directory used by backup script. |
 | `INCLUDE_SECRETS_IN_BACKUP` | No | Includes `.env` in backup archives only when set to `true`. Use encrypted storage. |
 
-Uploaded files and OCR artifacts should be stored on persistent disk. PostgreSQL backups do not include file bytes; the backup script copies `RECEIPT_STORAGE_PATH`, `ASSET_STORAGE_PATH`, `VAULT_STORAGE_PATH`, and `OCR_STORAGE_PATH` separately.
+Uploaded files, OCR artifacts, and backup archives should be stored on persistent disk. PostgreSQL backups do not include file bytes; the backup script copies `RECEIPT_STORAGE_PATH`, `ASSET_STORAGE_PATH`, `VAULT_STORAGE_PATH`, and `OCR_STORAGE_PATH` separately.

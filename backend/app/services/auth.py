@@ -10,7 +10,7 @@ from app.core.security import hash_password, verify_password
 from app.models.refresh_session import RefreshSession
 from app.models.user import User
 from app.schemas.auth import AuthSessionRead, LoginRequest, RegisterRequest, SetupStatusRead
-from app.schemas.user import PasswordChangeRequest, UserProfileUpdate
+from app.schemas.user import PasswordChangeRequest, UserProfileUpdate, UserRead
 from app.services.audit import create_audit_log, request_ip
 from app.services.rate_limit import login_rate_limiter
 from app.services.sessions import (
@@ -97,7 +97,7 @@ def register_user(
     db.refresh(user)
     set_auth_cookies(response, issued_session)
     return AuthSessionRead(
-        user=user,
+        user=UserRead.model_validate(user, from_attributes=True),
         access_token_expires_at=issued_session.access_token_expires_at,
     )
 
@@ -137,7 +137,7 @@ def login_user(
     db.refresh(user)
     set_auth_cookies(response, issued_session)
     return AuthSessionRead(
-        user=user,
+        user=UserRead.model_validate(user, from_attributes=True),
         access_token_expires_at=issued_session.access_token_expires_at,
     )
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { Download, Eye, ScanText, Trash2, Upload } from "lucide-react";
+import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
@@ -22,11 +23,6 @@ export default function VaultFolderPage() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewType, setPreviewType] = useState<string | null>(null);
   const [ocrResult, setOcrResult] = useState<OCRResult | null>(null);
-  const [ocrAmount, setOcrAmount] = useState("");
-  const [ocrCurrency, setOcrCurrency] = useState("GBP");
-  const [ocrDate, setOcrDate] = useState("");
-  const [ocrTime, setOcrTime] = useState("");
-  const [ocrReference, setOcrReference] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -111,39 +107,9 @@ export default function VaultFolderPage() {
         body: JSON.stringify({ source_type: "vault_document", source_id: document.id })
       });
       setOcrResult(result);
-      setOcrAmount(result.amount ?? "");
-      setOcrCurrency(result.currency ?? "GBP");
-      setOcrDate(result.document_date ?? "");
-      setOcrTime(result.document_time ?? "");
-      setOcrReference(result.reference ?? "");
-      setMessage("OCR result ready for review.");
+      setMessage("OCR job queued.");
     } catch (ocrError) {
       setError(errorMessage(ocrError));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  async function confirmOcr() {
-    if (!ocrResult) return;
-    setBusy(true);
-    setError(null);
-    try {
-      const confirmed = await apiFetch<OCRResult>(`/api/v1/ocr/results/${ocrResult.id}/confirm`, {
-        method: "PATCH",
-        body: JSON.stringify({
-          amount: ocrAmount || null,
-          currency: ocrCurrency || null,
-          document_date: ocrDate || null,
-          document_time: ocrTime || null,
-          reference: ocrReference || null,
-          status: "confirmed"
-        })
-      });
-      setOcrResult(confirmed);
-      setMessage("OCR result confirmed.");
-    } catch (confirmError) {
-      setError(errorMessage(confirmError));
     } finally {
       setBusy(false);
     }
@@ -195,34 +161,13 @@ export default function VaultFolderPage() {
 
             {ocrResult ? (
               <div className="rounded-lg border border-black/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/5">
-                <h3 className="text-lg font-semibold">OCR Review</h3>
+                <h3 className="text-lg font-semibold">OCR Job</h3>
                 <p className="mt-1 text-sm text-black/60 dark:text-white/60">
-                  Confidence {ocrResult.confidence_score}% - {statusLabel(ocrResult.status)}
+                  {statusLabel(ocrResult.status)}
                 </p>
-                <div className="mt-4 grid gap-3 md:grid-cols-2">
-                  <Field id="ocr-amount" label="Amount">
-                    <input id="ocr-amount" type="number" step="0.01" value={ocrAmount} onChange={(event) => setOcrAmount(event.target.value)} className={inputClass} />
-                  </Field>
-                  <Field id="ocr-currency" label="Currency">
-                    <select id="ocr-currency" value={ocrCurrency} onChange={(event) => setOcrCurrency(event.target.value)} className={inputClass}>
-                      {["GBP", "USD", "NGN", "EUR"].map((item) => (
-                        <option key={item} value={item}>{item}</option>
-                      ))}
-                    </select>
-                  </Field>
-                  <Field id="ocr-date" label="Date">
-                    <input id="ocr-date" type="date" value={ocrDate} onChange={(event) => setOcrDate(event.target.value)} className={inputClass} />
-                  </Field>
-                  <Field id="ocr-time" label="Time">
-                    <input id="ocr-time" value={ocrTime} onChange={(event) => setOcrTime(event.target.value)} className={inputClass} />
-                  </Field>
-                  <Field id="ocr-reference" label="Reference">
-                    <input id="ocr-reference" value={ocrReference} onChange={(event) => setOcrReference(event.target.value)} className={inputClass} />
-                  </Field>
-                </div>
-                <button type="button" disabled={busy || ocrResult.status === "confirmed"} onClick={() => void confirmOcr()} className="mt-4 rounded-md bg-moss px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60">
-                  Confirm OCR
-                </button>
+                <Link href={`/ocr/${ocrResult.id}`} className="mt-4 inline-flex rounded-md bg-moss px-4 py-2.5 text-sm font-semibold text-white">
+                  Open OCR review
+                </Link>
               </div>
             ) : null}
           </div>

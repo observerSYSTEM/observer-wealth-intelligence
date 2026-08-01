@@ -4,6 +4,11 @@ services:
       ENVIRONMENT: production
       SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env before production deployment}
 
+  ocr-worker:
+    environment:
+      ENVIRONMENT: production
+      SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env before production deployment}
+
   frontend:
     build:
       args:

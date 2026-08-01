@@ -11,7 +11,7 @@ import {
 } from "react";
 import type { ReactNode } from "react";
 
-import { apiFetch } from "@/lib/api";
+import { apiFetch, clearOfflineCache } from "@/lib/api";
 import type { AuthSession, SetupStatus, User } from "@/types/auth";
 
 type AuthStatus = "loading" | "authenticated" | "unauthenticated" | "setup-required";
@@ -73,6 +73,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSessionExpired(true);
       setUser(null);
       setStatus("unauthenticated");
+      clearOfflineCache();
       router.replace("/login");
     };
     window.addEventListener("owi:session-expired", onExpired);
@@ -106,6 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setUser(null);
       setStatus("unauthenticated");
+      clearOfflineCache();
       router.replace("/login");
     }
   }, [router]);

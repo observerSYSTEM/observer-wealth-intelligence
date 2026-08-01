@@ -31,11 +31,16 @@
 - Dashboard 2.0 with total assets, category cards, asset allocation, portfolio growth, recent assets, recent receipts, tracked savings, and goal progress.
 - Multi-currency storage for GBP, USD, NGN, and EUR with exchange-rate placeholders and no FX conversion.
 
-## Milestone 5: OCR Intelligence And Duplicate Review
+## Milestone 5: Automation, Goals, Notifications, Scheduled Backups, PWA
 
-- OCR-assisted receipt review improvements.
-- Stronger duplicate detection using confirmed OCR metadata.
-- Optional linking from confirmed OCR results into entries, assets, or vault records.
+- Real local OCR processing with a receipt-triggered review workflow.
+- Multiple financial goals with append-only contribution history.
+- Unified wealth timeline across entries, assets, receipts, vault, OCR, goals, notifications, and backups.
+- In-app notifications with optional Telegram delivery.
+- Owner-only scheduled backup configuration, manual backup runs, and restore verification.
+- Installable PWA shell with safe read-only offline fallback.
+- Dashboard 3.0 with goals, OCR review count, notification count, latest backup status, and timeline events.
+- Raspberry Pi ARM64 deployment compatibility and systemd backup timer.
 
 ## Milestone 6: Integrations And Asset Sources
 
@@ -49,9 +54,8 @@
 - PDF reports.
 - Report generation audit trail.
 
-## Milestone 8: Raspberry Pi Optimization, PWA, Offline Support, Daily Backups
+## Milestone 8: Raspberry Pi Optimization And Offline Depth
 
-- Runtime optimization for Raspberry Pi.
-- PWA installation support.
-- Offline read support for selected screens.
-- Scheduled daily backups.
+- Further runtime optimization for low-memory Raspberry Pi devices.
+- Broader read-only offline views after explicit privacy review.
+- Backup retention policies and encrypted off-device replication.

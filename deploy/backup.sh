@@ -8,16 +8,19 @@ set -a
 [ -f .env ] && . ./.env
 set +a
 
-BACKUP_DIR="${BACKUP_DIR:-./backups}"
+BACKUP_DIR="${BACKUP_DIR:-${BACKUP_STORAGE_PATH:-./data/backups}}"
 POSTGRES_DB="${POSTGRES_DB:-observer_wealth}"
 POSTGRES_USER="${POSTGRES_USER:-observer}"
 RECEIPT_STORAGE_PATH="${RECEIPT_STORAGE_PATH:-data/receipts}"
 ASSET_STORAGE_PATH="${ASSET_STORAGE_PATH:-data/assets}"
 VAULT_STORAGE_PATH="${VAULT_STORAGE_PATH:-data/vault}"
 OCR_STORAGE_PATH="${OCR_STORAGE_PATH:-data/ocr}"
+BACKUP_STORAGE_PATH="${BACKUP_STORAGE_PATH:-data/backups}"
 INCLUDE_SECRETS_IN_BACKUP="${INCLUDE_SECRETS_IN_BACKUP:-false}"
 STAMP="$(date -u +%Y%m%d-%H%M%S)"
 OUTPUT_DIR="${BACKUP_DIR%/}/${STAMP}"
+ARCHIVE_PATH="${OUTPUT_DIR}.tar.gz"
+TEMP_ARCHIVE="${ARCHIVE_PATH}.tmp"
 
 mkdir -p "$OUTPUT_DIR"
 
@@ -77,8 +80,9 @@ elif command -v shasum >/dev/null 2>&1; then
   (cd "$OUTPUT_DIR" && find . -type f ! -name SHA256SUMS -print0 | sort -z | xargs -0 shasum -a 256 > SHA256SUMS)
 fi
 
-tar -czf "${OUTPUT_DIR}.tar.gz" -C "$BACKUP_DIR" "$STAMP"
-tar -tzf "${OUTPUT_DIR}.tar.gz" >/dev/null
+tar -czf "$TEMP_ARCHIVE" -C "$BACKUP_DIR" "$STAMP"
+tar -tzf "$TEMP_ARCHIVE" >/dev/null
+mv "$TEMP_ARCHIVE" "$ARCHIVE_PATH"
 rm -rf "$OUTPUT_DIR"
 
-echo "Backup written to ${OUTPUT_DIR}.tar.gz"
+echo "Backup written to ${ARCHIVE_PATH}"

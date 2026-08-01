@@ -2,15 +2,23 @@ from collections import defaultdict
 from datetime import date
 from decimal import Decimal
 
-from sqlalchemy import desc, select
+from sqlalchemy import desc, func, select
 from sqlalchemy.orm import Session
 
+from app.models.backup_run import BackupRun
+from app.models.financial_goal import FinancialGoal
+from app.models.notification import Notification
+from app.models.ocr_result import OCRResult
 from app.models.user import User
 from app.models.wealth_entry import WealthEntry
 from app.schemas.dashboard import CurrencySavingsTotal, DashboardSummaryRead
+from app.services.automation import backup_run_to_read
 from app.services.entries import entry_to_read, quantize_money, user_today
+from app.services.goals import goal_to_read
+from app.services.notifications import notification_to_read
 from app.services.portfolio import portfolio_summary
 from app.services.settings import get_app_settings
+from app.services.timeline import timeline_events
 
 
 def goal_progress(total: Decimal, goal: Decimal) -> Decimal:
@@ -125,6 +133,48 @@ def dashboard_summary(db: Session, user: User) -> DashboardSummaryRead:
             daily[entry.entry_date] += entry.actual_savings
             monthly[entry.entry_date.strftime("%Y-%m")] += entry.actual_savings
 
+    active_goals = list(
+        db.scalars(
+            select(FinancialGoal)
+            .where(FinancialGoal.user_id == user.id, FinancialGoal.status != "archived")
+            .order_by(FinancialGoal.priority, desc(FinancialGoal.updated_at))
+            .limit(5)
+        ).all()
+    )
+    pending_ocr_reviews = (
+        db.scalar(
+            select(func.count()).select_from(OCRResult).where(
+                OCRResult.user_id == user.id,
+                OCRResult.status == "review_required",
+            )
+        )
+        or 0
+    )
+    unread_notifications = (
+        db.scalar(
+            select(func.count()).select_from(Notification).where(
+                Notification.user_id == user.id,
+                Notification.channel == "in_app",
+                Notification.status != "read",
+            )
+        )
+        or 0
+    )
+    recent_notifications = list(
+        db.scalars(
+            select(Notification)
+            .where(Notification.user_id == user.id)
+            .order_by(desc(Notification.created_at))
+            .limit(5)
+        ).all()
+    )
+    latest_backup = db.scalar(
+        select(BackupRun)
+        .where(BackupRun.user_id == user.id)
+        .order_by(desc(BackupRun.started_at))
+        .limit(1)
+    )
+
     return DashboardSummaryRead(
         tracked_savings=total,
         tracked_savings_currency=goal_currency,
@@ -165,4 +215,12 @@ def dashboard_summary(db: Session, user: User) -> DashboardSummaryRead:
         ],
         recent_assets=portfolio.recent_assets,
         recent_receipts=portfolio.recent_receipts,
+        active_goals=[goal_to_read(db, user, goal) for goal in active_goals],
+        pending_ocr_reviews=pending_ocr_reviews,
+        unread_notifications=unread_notifications,
+        recent_notifications=[
+            notification_to_read(notification) for notification in recent_notifications
+        ],
+        recent_timeline=timeline_events(db, user, limit=8, offset=0).items,
+        latest_backup=backup_run_to_read(latest_backup) if latest_backup is not None else None,
     )

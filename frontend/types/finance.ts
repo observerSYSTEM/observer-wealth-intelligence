@@ -154,11 +154,216 @@ export type OCRResult = {
   document_date: string | null;
   document_time: string | null;
   reference: string | null;
+  recipient: string | null;
+  sender: string | null;
+  extracted_fields: Record<string, unknown>;
+  amount_candidates: Array<Record<string, unknown>>;
+  engine_name: string | null;
+  engine_version: string | null;
+  processing_duration_ms: number | null;
+  retry_count: number;
+  max_retries: number;
+  failure_message: string | null;
   confidence_score: string;
   status: string;
   confirmed_at: string | null;
   created_at: string;
   updated_at: string;
+};
+
+export type OCRResultList = {
+  items: OCRResult[];
+  total: number;
+  limit: number;
+  offset: number;
+};
+
+export type Goal = {
+  id: string;
+  user_id: string;
+  name: string;
+  description: string | null;
+  category: string;
+  currency: string;
+  target_amount: string;
+  starting_amount: string;
+  current_amount: string;
+  deadline: string | null;
+  priority: number;
+  status: string;
+  progress_source: string;
+  is_primary: boolean;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+  completed_at: string | null;
+  archived_at: string | null;
+  progress_percentage: string;
+  remaining_amount: string;
+  overfunded_amount: string;
+  estimated_monthly_contribution: string | null;
+};
+
+export type GoalList = {
+  items: Goal[];
+  total: number;
+  limit: number;
+  offset: number;
+};
+
+export type GoalContribution = {
+  id: string;
+  goal_id: string;
+  user_id: string;
+  amount: string;
+  currency: string;
+  contribution_date: string;
+  source_type: string;
+  source_id: string | null;
+  notes: string | null;
+  created_at: string;
+};
+
+export type Notification = {
+  id: string;
+  user_id: string;
+  title: string;
+  message: string;
+  type: string;
+  channel: string;
+  severity: string;
+  status: string;
+  related_type: string | null;
+  related_id: string | null;
+  telegram_message_id: string | null;
+  failure_reason: string | null;
+  deduplication_key: string | null;
+  scheduled_for: string | null;
+  sent_at: string | null;
+  read_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type NotificationList = {
+  items: Notification[];
+  total: number;
+  unread_count: number;
+  limit: number;
+  offset: number;
+};
+
+export type AutomationJob = {
+  id: string;
+  user_id: string;
+  job_type: string;
+  name: string;
+  enabled: boolean;
+  cadence: string;
+  run_at_time: string;
+  status: string;
+  configuration: string | null;
+  next_run_at: string | null;
+  last_run_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type AutomationJobList = {
+  items: AutomationJob[];
+  total: number;
+};
+
+export type BackupRun = {
+  id: string;
+  user_id: string;
+  job_id: string | null;
+  trigger: string;
+  status: string;
+  backup_filename: string | null;
+  sha256: string | null;
+  size_bytes: number;
+  started_at: string;
+  completed_at: string | null;
+  verified_at: string | null;
+  restore_verified: boolean;
+  verification_message: string | null;
+  error_message: string | null;
+};
+
+export type BackupRunList = {
+  items: BackupRun[];
+  total: number;
+  limit: number;
+  offset: number;
+};
+
+export type TimelineEvent = {
+  id: string;
+  event_type: string;
+  title: string;
+  summary: string | null;
+  occurred_at: string;
+  amount: string | null;
+  currency: string | null;
+  entity_type: string | null;
+  entity_id: string | null;
+  status: string | null;
+  metadata: Record<string, unknown>;
+};
+
+export type NotificationPreference = {
+  id: string;
+  user_id: string;
+  in_app_enabled: boolean;
+  telegram_enabled: boolean;
+  daily_reminder_enabled: boolean;
+  daily_reminder_time: string;
+  daily_reminder_weekdays: string;
+  weekly_summary_enabled: boolean;
+  weekly_summary_day: number;
+  weekly_summary_time: string;
+  goal_alerts_enabled: boolean;
+  ocr_alerts_enabled: boolean;
+  backup_alerts_enabled: boolean;
+  quiet_hours_start: string | null;
+  quiet_hours_end: string | null;
+  timezone: string;
+  created_at: string;
+  updated_at: string;
+};
+
+export type BackupSettings = {
+  id: string;
+  user_id: string;
+  enabled: boolean;
+  frequency: string;
+  run_time: string;
+  weekday: number | null;
+  month_day: number | null;
+  retention_daily: number;
+  retention_weekly: number;
+  retention_monthly: number;
+  backup_path: string;
+  include_secrets: boolean;
+  last_success_at: string | null;
+  last_failure_at: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
+export type BackupStatus = {
+  settings: BackupSettings;
+  latest_backup: BackupRun | null;
+  latest_success: BackupRun | null;
+  latest_failure: BackupRun | null;
+};
+
+export type TimelineList = {
+  items: TimelineEvent[];
+  total: number;
+  limit: number;
+  offset: number;
 };
 
 export type CategoryValue = {
@@ -228,4 +433,10 @@ export type DashboardSummary = {
   portfolio_growth: Array<[string, string, string]>;
   recent_assets: Asset[];
   recent_receipts: Receipt[];
+  active_goals: Goal[];
+  pending_ocr_reviews: number;
+  unread_notifications: number;
+  recent_notifications: Notification[];
+  recent_timeline: TimelineEvent[];
+  latest_backup: BackupRun | null;
 };

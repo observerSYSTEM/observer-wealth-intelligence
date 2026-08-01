@@ -8,8 +8,11 @@ The backend is under `backend/app`:
 
 - `api/routes/auth.py` exposes setup, registration, login, refresh, logout, and current-user endpoints.
 - `api/routes/assets.py` exposes generic asset CRUD, asset value history, and asset document upload.
+- `api/routes/automation.py` exposes owner-only backup schedule, manual backup, backup listing, and verification endpoints.
 - `api/routes/dashboard.py` exposes authenticated wealth summary data.
 - `api/routes/entries.py` exposes authenticated wealth-entry CRUD.
+- `api/routes/goals.py` exposes financial goals and append-only goal contributions.
+- `api/routes/notifications.py` exposes in-app notifications and read state.
 - `api/routes/ocr.py` exposes OCR job creation, result reads, and explicit confirmation.
 - `api/routes/portfolio.py` exposes portfolio summary calculations.
 - `api/routes/receipts.py` exposes authenticated receipt metadata and content access.
@@ -17,8 +20,9 @@ The backend is under `backend/app`:
 - `api/routes/users.py` exposes authenticated profile and password operations.
 - `api/routes/vault.py` exposes digital vault folders and document operations.
 - `api/routes/settings.py` exposes authenticated settings reads and owner-only settings changes.
-- `models/` contains SQLAlchemy models for users, refresh sessions, app settings, audit logs, wealth entries, receipts, assets, asset value history, vault documents, and OCR results.
-- `services/` contains authentication, session, settings, audit, rate-limit, wealth-entry, dashboard, receipt-storage, asset, portfolio, vault, OCR, and search logic.
+- `api/routes/timeline.py` exposes the unified wealth timeline.
+- `models/` contains SQLAlchemy models for users, refresh sessions, app settings, audit logs, wealth entries, receipts, assets, asset value history, vault documents, OCR results, financial goals, goal contributions, notifications, automation jobs, and backup runs.
+- `services/` contains authentication, session, settings, audit, rate-limit, wealth-entry, dashboard, receipt-storage, asset, portfolio, vault, OCR, search, goal, notification, automation, backup, and timeline logic.
 - Alembic migrations live under `backend/alembic/versions`.
 
 ## Authentication Flow
@@ -136,13 +140,31 @@ Confirmation is explicit through the OCR confirmation endpoint. Confirming an OC
 
 OCR extracted text artifacts are written under `data/ocr/` for recovery and debugging. The API does not expose OCR artifact filesystem paths.
 
+## Goals And Timeline Architecture
+
+Financial goals are stored in `financial_goals`. Contributions are append-only rows in `goal_contributions`; adding a contribution updates the goal `current_amount` for fast dashboard reads. Contribution currency must match the goal currency until FX conversion is implemented.
+
+The unified timeline is computed from existing records instead of duplicating history. It aggregates wealth entries, assets, asset value history, receipts, vault documents, OCR results, goals, goal contributions, notifications, and backup runs, sorted by occurrence time.
+
+## Notification Architecture
+
+Notifications are stored in `notifications`. In-app notifications default to `unread`, support read/read-all operations, and are owner-scoped by user id. Optional Telegram delivery is disabled by default and only runs when Telegram settings are present. Telegram delivery failures are stored on the notification row and do not block the in-app notification.
+
+## Automation And Backup Architecture
+
+Automation jobs are stored in `automation_jobs`. Milestone 5 includes the `scheduled_backup` job, owner-only schedule changes, and owner-only manual backup runs.
+
+Application-level backup runs are stored in `backup_runs`. The API backup creates a ZIP archive under `data/backups`, writes a manifest, records SHA-256 and size metadata, and verifies every archived file checksum without restoring over live data. The API backup does not run `pg_dump`; Raspberry Pi and production database dumps are handled by `deploy/backup.sh`.
+
+The Raspberry Pi deployment includes `observer-wealth-backup.service` and `observer-wealth-backup.timer` for scheduled shell backups.
+
 ## Global Search
 
 Global search is owner-scoped and searches asset names, notes, institutions, references, receipt filenames, vault filenames, vault tags, vault notes, and vault folder names.
 
 ## Dashboard And Streaks
 
-Daily-savings dashboard totals use `actual_savings`, not recommended savings. Dashboard 2.0 adds total assets, cash, investments, property, crypto, business, trading accounts, asset allocation, portfolio growth, recent assets, and recent receipts. The primary goal progress calculation only includes entries and assets in `primary_goal_currency`; there is no foreign-exchange conversion in this milestone.
+Daily-savings dashboard totals use `actual_savings`, not recommended savings. Dashboard 3.0 adds total assets, cash, investments, property, crypto, business, trading accounts, asset allocation, portfolio growth, recent assets, recent receipts, active goals, pending OCR reviews, unread notifications, recent notifications, recent timeline events, and latest backup verification status. The primary goal progress calculation only includes entries and assets in `primary_goal_currency`; there is no foreign-exchange conversion in this milestone.
 
 The savings streak counts consecutive eligible saving days on which every positive-profit entry for that date met or exceeded the target. Weekends and days without entries do not automatically break the streak. Losing, zero-profit, and no-trade days are ignored. A positive-profit day with any below-target entry breaks the streak.
 

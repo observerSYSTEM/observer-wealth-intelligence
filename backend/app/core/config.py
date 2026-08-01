@@ -19,8 +19,20 @@ class Settings(BaseSettings):
     asset_storage_path: str = "data/assets"
     vault_storage_path: str = "data/vault"
     ocr_storage_path: str = "data/ocr"
+    backup_storage_path: str = "data/backups"
     vault_max_file_size_bytes: int = 25 * 1024 * 1024
     easyocr_languages: list[str] = ["en"]
+    ocr_low_confidence_threshold: int = 70
+    ocr_pdf_page_limit: int = 3
+    ocr_pdf_render_dpi: int = 150
+    ocr_image_max_pixels: int = 20_000_000
+    ocr_max_retries: int = 3
+    ocr_worker_poll_seconds: int = 5
+    telegram_notifications_enabled: bool = False
+    telegram_bot_token: str | None = None
+    telegram_chat_id: str | None = None
+    backup_schedule_enabled: bool = False
+    backup_schedule_time: str = "02:30"
     database_url: str = (
         "postgresql+psycopg://observer:observer-local-password@localhost:5432/observer_wealth"
     )

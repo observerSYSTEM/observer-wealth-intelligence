@@ -4,9 +4,13 @@ from decimal import Decimal
 from pydantic import BaseModel
 
 from app.schemas.asset import AssetRead
+from app.schemas.automation import BackupRunRead
 from app.schemas.entry import EntryRead
+from app.schemas.goal import GoalRead
+from app.schemas.notification import NotificationRead
 from app.schemas.portfolio import CategoryValueRead
 from app.schemas.receipt import ReceiptRead
+from app.schemas.timeline import TimelineEventRead
 
 
 class CurrencySavingsTotal(BaseModel):
@@ -44,3 +48,9 @@ class DashboardSummaryRead(BaseModel):
     portfolio_growth: list[tuple[date, str, Decimal]]
     recent_assets: list[AssetRead]
     recent_receipts: list[ReceiptRead]
+    active_goals: list[GoalRead]
+    pending_ocr_reviews: int
+    unread_notifications: int
+    recent_notifications: list[NotificationRead]
+    recent_timeline: list[TimelineEventRead]
+    latest_backup: BackupRunRead | None

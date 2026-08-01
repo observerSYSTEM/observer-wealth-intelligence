@@ -23,13 +23,17 @@ def receipt_storage(tmp_path: Path) -> Generator[None]:
     original_asset_path = settings.asset_storage_path
     original_vault_path = settings.vault_storage_path
     original_ocr_path = settings.ocr_storage_path
+    original_backup_path = settings.backup_storage_path
     original_vault_size = settings.vault_max_file_size_bytes
+    original_telegram_enabled = settings.telegram_notifications_enabled
     settings.receipt_storage_path = str(tmp_path / "receipts")
     settings.receipt_max_file_size_bytes = 10 * 1024 * 1024
     settings.asset_storage_path = str(tmp_path / "assets")
     settings.vault_storage_path = str(tmp_path / "vault")
     settings.ocr_storage_path = str(tmp_path / "ocr")
+    settings.backup_storage_path = str(tmp_path / "backups")
     settings.vault_max_file_size_bytes = 25 * 1024 * 1024
+    settings.telegram_notifications_enabled = False
     try:
         yield
     finally:
@@ -38,7 +42,9 @@ def receipt_storage(tmp_path: Path) -> Generator[None]:
         settings.asset_storage_path = original_asset_path
         settings.vault_storage_path = original_vault_path
         settings.ocr_storage_path = original_ocr_path
+        settings.backup_storage_path = original_backup_path
         settings.vault_max_file_size_bytes = original_vault_size
+        settings.telegram_notifications_enabled = original_telegram_enabled
 
 
 @pytest.fixture()

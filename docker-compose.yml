@@ -33,8 +33,52 @@ services:
       ASSET_STORAGE_PATH: ${ASSET_STORAGE_PATH:-data/assets}
       VAULT_STORAGE_PATH: ${VAULT_STORAGE_PATH:-data/vault}
       OCR_STORAGE_PATH: ${OCR_STORAGE_PATH:-data/ocr}
+      BACKUP_STORAGE_PATH: ${BACKUP_STORAGE_PATH:-data/backups}
       VAULT_MAX_FILE_SIZE_BYTES: ${VAULT_MAX_FILE_SIZE_BYTES:-26214400}
       EASYOCR_LANGUAGES: ${EASYOCR_LANGUAGES:-["en"]}
+      OCR_LOW_CONFIDENCE_THRESHOLD: ${OCR_LOW_CONFIDENCE_THRESHOLD:-70}
+      OCR_PDF_PAGE_LIMIT: ${OCR_PDF_PAGE_LIMIT:-3}
+      OCR_PDF_RENDER_DPI: ${OCR_PDF_RENDER_DPI:-150}
+      OCR_IMAGE_MAX_PIXELS: ${OCR_IMAGE_MAX_PIXELS:-20000000}
+      OCR_MAX_RETRIES: ${OCR_MAX_RETRIES:-3}
+      OCR_WORKER_POLL_SECONDS: ${OCR_WORKER_POLL_SECONDS:-5}
+      TELEGRAM_NOTIFICATIONS_ENABLED: ${TELEGRAM_NOTIFICATIONS_ENABLED:-false}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
+      BACKUP_SCHEDULE_ENABLED: ${BACKUP_SCHEDULE_ENABLED:-false}
+      BACKUP_SCHEDULE_TIME: ${BACKUP_SCHEDULE_TIME:-02:30}
+    volumes:
+      - ./data:/app/data
+    depends_on:
+      db:
+        condition: service_healthy
+
+  ocr-worker:
+    build:
+      context: .
+      dockerfile: docker/backend/Dockerfile
+    command: ["python", "-m", "app.workers.ocr_worker"]
+    restart: unless-stopped
+    environment:
+      APP_NAME: ${APP_NAME:-Observer Wealth Intelligence}
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      SECRET_KEY: ${SECRET_KEY:-development-secret-change-before-production}
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://observer:observer-local-password@db:5432/observer_wealth}
+      RECEIPT_STORAGE_PATH: ${RECEIPT_STORAGE_PATH:-data/receipts}
+      ASSET_STORAGE_PATH: ${ASSET_STORAGE_PATH:-data/assets}
+      VAULT_STORAGE_PATH: ${VAULT_STORAGE_PATH:-data/vault}
+      OCR_STORAGE_PATH: ${OCR_STORAGE_PATH:-data/ocr}
+      BACKUP_STORAGE_PATH: ${BACKUP_STORAGE_PATH:-data/backups}
+      EASYOCR_LANGUAGES: ${EASYOCR_LANGUAGES:-["en"]}
+      OCR_LOW_CONFIDENCE_THRESHOLD: ${OCR_LOW_CONFIDENCE_THRESHOLD:-70}
+      OCR_PDF_PAGE_LIMIT: ${OCR_PDF_PAGE_LIMIT:-3}
+      OCR_PDF_RENDER_DPI: ${OCR_PDF_RENDER_DPI:-150}
+      OCR_IMAGE_MAX_PIXELS: ${OCR_IMAGE_MAX_PIXELS:-20000000}
+      OCR_MAX_RETRIES: ${OCR_MAX_RETRIES:-3}
+      OCR_WORKER_POLL_SECONDS: ${OCR_WORKER_POLL_SECONDS:-5}
+      TELEGRAM_NOTIFICATIONS_ENABLED: ${TELEGRAM_NOTIFICATIONS_ENABLED:-false}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
     volumes:
       - ./data:/app/data
     depends_on:

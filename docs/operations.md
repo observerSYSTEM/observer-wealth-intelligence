@@ -18,7 +18,7 @@ Open `/setup` after the first deployment. The first registered account becomes t
 ./deploy/backup.sh
 ```
 
-The backup script uses `pg_dump` inside the database container and writes a compressed archive under `backups/`.
+The backup script uses `pg_dump` inside the database container and writes a compressed archive under `data/backups/` by default.
 
 The archive includes:
 
@@ -32,14 +32,39 @@ The archive includes:
 
 The script excludes `.env` by default. Set `INCLUDE_SECRETS_IN_BACKUP=true` only when the backup destination is encrypted and intentionally allowed to contain secrets.
 
-The script validates the compressed archive with `tar -tzf` before reporting success. To perform a manual checksum verification after extraction:
+The script validates the compressed archive with `tar -tzf` before reporting success. To perform a read-only verification:
 
 ```bash
-cd extracted-backup-directory
-sha256sum -c SHA256SUMS
+./deploy/verify-backup.sh data/backups/<backup-file>.tar.gz
 ```
 
+The restore script verifies the archive before any write. It refuses live restore unless `--confirm-restore` is present:
+
+```bash
+./deploy/restore.sh data/backups/<backup-file>.tar.gz --verify-only
+./deploy/restore.sh data/backups/<backup-file>.tar.gz --dry-run
+./deploy/restore.sh data/backups/<backup-file>.tar.gz --confirm-restore
+```
+
+Use `--database-only` or `--files-only` for partial recovery. File restore overlays receipt, asset, vault, and OCR folders; database restore uses `pg_restore --clean --if-exists` inside the database container.
+
 Uploaded files and OCR artifacts live outside PostgreSQL, so a complete recovery requires the database dump plus the receipt, asset, vault, and OCR directories captured in the archive.
+
+## OCR Worker
+
+`ocr-worker` is a separate Compose service that runs `python -m app.workers.ocr_worker`. OCR API requests create pending rows quickly; the worker processes them with EasyOCR and PyMuPDF, writes OCR text artifacts under `data/ocr/`, and leaves results in `review_required` until the user confirms or cancels them.
+
+On Raspberry Pi, the Pi compose overlay lowers PDF render DPI and page limits by default. Tune `OCR_PDF_PAGE_LIMIT`, `OCR_PDF_RENDER_DPI`, `OCR_IMAGE_MAX_PIXELS`, and `OCR_WORKER_POLL_SECONDS` in `.env` for the actual device.
+
+## Scheduled Raspberry Pi Backups
+
+`deploy/install-pi.sh` installs and enables `observer-wealth-backup.timer`. The timer runs `observer-wealth-backup.service`, which executes `deploy/backup.sh`. Use systemd to inspect or disable it:
+
+```bash
+sudo systemctl status observer-wealth-backup.timer
+sudo systemctl list-timers observer-wealth-backup.timer
+sudo systemctl disable --now observer-wealth-backup.timer
+```
 
 ## Updates
 
@@ -61,6 +86,7 @@ COMPOSE_OVERLAY=docker-compose.pi.yml ./deploy/update.sh
 sudo systemctl status observer-wealth-intelligence
 sudo systemctl restart observer-wealth-intelligence
 sudo journalctl -u observer-wealth-intelligence -f
+sudo journalctl -u observer-wealth-backup -f
 ```
 
 ## Owner Recovery

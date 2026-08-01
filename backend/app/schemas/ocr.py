@@ -1,6 +1,6 @@
 from datetime import date, datetime
 from decimal import Decimal
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
@@ -8,7 +8,7 @@ from app.schemas.entry import money
 from app.schemas.user import validate_currency
 
 OCRSourceType = Literal["receipt", "vault_document"]
-OCRStatus = Literal["pending_review", "confirmed", "discarded"]
+OCRStatus = Literal["pending", "processing", "review_required", "confirmed", "failed", "cancelled"]
 
 
 class OCRJobCreate(BaseModel):
@@ -22,6 +22,8 @@ class OCRResultConfirm(BaseModel):
     document_date: date | None = None
     document_time: str | None = Field(default=None, max_length=8)
     reference: str | None = Field(default=None, max_length=180)
+    recipient: str | None = Field(default=None, max_length=180)
+    sender: str | None = Field(default=None, max_length=180)
     status: OCRStatus = "confirmed"
 
     @field_validator("amount")
@@ -46,6 +48,16 @@ class OCRResultRead(BaseModel):
     document_date: date | None
     document_time: str | None
     reference: str | None
+    recipient: str | None
+    sender: str | None
+    extracted_fields: dict[str, Any] = Field(default_factory=dict)
+    amount_candidates: list[dict[str, Any]] = Field(default_factory=list)
+    engine_name: str | None
+    engine_version: str | None
+    processing_duration_ms: int | None
+    retry_count: int
+    max_retries: int
+    failure_message: str | None
     confidence_score: Decimal
     status: str
     confirmed_at: datetime | None

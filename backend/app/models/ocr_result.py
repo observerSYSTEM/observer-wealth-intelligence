@@ -26,10 +26,20 @@ class OCRResult(Base):
     document_date: Mapped[date | None] = mapped_column(Date, nullable=True)
     document_time: Mapped[str | None] = mapped_column(String(8), nullable=True)
     reference: Mapped[str | None] = mapped_column(String(180), nullable=True)
+    recipient: Mapped[str | None] = mapped_column(String(180), nullable=True)
+    sender: Mapped[str | None] = mapped_column(String(180), nullable=True)
+    extracted_fields_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    amount_candidates_json: Mapped[str | None] = mapped_column(Text, nullable=True)
+    engine_name: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    engine_version: Mapped[str | None] = mapped_column(String(80), nullable=True)
+    processing_duration_ms: Mapped[int | None] = mapped_column(nullable=True)
+    retry_count: Mapped[int] = mapped_column(default=0, nullable=False)
+    max_retries: Mapped[int] = mapped_column(default=3, nullable=False)
+    failure_message: Mapped[str | None] = mapped_column(String(1000), nullable=True)
     confidence_score: Mapped[Decimal] = mapped_column(Numeric(5, 2), nullable=False)
     status: Mapped[str] = mapped_column(
         String(24),
-        default="pending_review",
+        default="pending",
         index=True,
         nullable=False,
     )

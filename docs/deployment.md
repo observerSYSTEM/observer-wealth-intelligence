@@ -32,8 +32,10 @@ data/
   vault/
   receipts/
   ocr/
-backups/
+  backups/
 ```
+
+The Pi overlay pins services to `linux/arm64` and installs both the app service and the backup timer.
 
 ## Database Migrations
 

@@ -12,6 +12,12 @@ services:
     environment:
       ENVIRONMENT: development
 
+  ocr-worker:
+    volumes:
+      - ./backend:/app
+    environment:
+      ENVIRONMENT: development
+
   frontend:
     build:
       target: development

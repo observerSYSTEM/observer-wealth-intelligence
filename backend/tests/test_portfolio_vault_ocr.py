@@ -3,8 +3,11 @@ from pathlib import Path
 
 from conftest import csrf_headers, register_owner, user_payload
 from fastapi.testclient import TestClient
+from sqlalchemy.orm import Session
 
 from app.core.config import settings
+from app.models.ocr_result import OCRResult
+from app.services.ocr import process_ocr_result
 
 PNG_BYTES = b"\x89PNG\r\n\x1a\n" + b"portfolio" * 8
 PNG_BYTES_TWO = b"\x89PNG\r\n\x1a\n" + b"vault" * 12
@@ -276,18 +279,27 @@ def test_global_search_finds_assets_receipts_and_vault_documents(client: TestCli
 
 def test_ocr_pipeline_requires_review_and_confirmation(
     client: TestClient,
+    db_session: Session,
     monkeypatch,
 ) -> None:
     register_owner(client)
     document = upload_vault_document(client)
 
-    def fake_easyocr(path: Path, media_type: str) -> tuple[str, Decimal]:
+    def fake_easyocr(path: Path, media_type: str) -> dict:
         assert path.exists()
         assert media_type == "application/pdf"
-        return (
-            "Amount GBP 123.45\nDate 2026-08-01\nTime 14:25\nReference MONZO-ABC",
-            Decimal("91.50"),
-        )
+        return {
+            "raw_text": "Amount GBP 123.45\nDate 2026-08-01\nTime 14:25\nReference MONZO-ABC",
+            "confidence": Decimal("91.50"),
+            "lines": [
+                {"text": "Amount GBP 123.45", "confidence": Decimal("94.00")},
+                {"text": "Date 2026-08-01", "confidence": Decimal("91.00")},
+                {"text": "Time 14:25", "confidence": Decimal("90.00")},
+                {"text": "Reference MONZO-ABC", "confidence": Decimal("91.00")},
+            ],
+            "engine_name": "easyocr",
+            "engine_version": "test",
+        }
 
     monkeypatch.setattr("app.services.ocr.run_easyocr", fake_easyocr)
     ocr = client.post(
@@ -297,13 +309,25 @@ def test_ocr_pipeline_requires_review_and_confirmation(
     )
 
     assert ocr.status_code == 201, ocr.text
-    result = ocr.json()
-    assert result["status"] == "pending_review"
+    queued = ocr.json()
+    assert queued["status"] == "pending"
+
+    row = db_session.get(OCRResult, queued["id"])
+    assert row is not None
+    processed = process_ocr_result(db_session, row)
+    assert processed.status == "review_required"
+
+    review = client.get(f"/api/v1/ocr/results/{queued['id']}")
+    assert review.status_code == 200
+    result = review.json()
+    assert result["status"] == "review_required"
     assert money(result["amount"]) == money("123.45")
     assert result["currency"] == "GBP"
     assert result["document_date"] == "2026-08-01"
     assert result["document_time"] == "14:25"
     assert result["reference"] == "MONZO-ABC"
+    assert result["extracted_fields"]["amount"]["value"] == "123.45"
+    assert result["amount_candidates"][0]["currency"] == "GBP"
     assert list(Path(settings.ocr_storage_path).rglob("*.txt"))
 
     confirm = client.patch(

@@ -1,0 +1,10 @@
+[Unit]
+Description=Observer Wealth Intelligence backup
+Requires=docker.service
+After=docker.service network-online.target observer-wealth-intelligence.service
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/observer-wealth-intelligence
+ExecStart=/opt/observer-wealth-intelligence/deploy/backup.sh
