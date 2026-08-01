@@ -3,6 +3,7 @@
 | Variable | Required | Description |
 | --- | --- | --- |
 | `APP_NAME` | No | API title shown in OpenAPI metadata. |
+| `APP_VERSION` | No | Release version returned by the health endpoint. Default is `1.0.0-rc.1`. |
 | `ENVIRONMENT` | No | `development`, `test`, or `production`. |
 | `SECRET_KEY` | Yes in production | JWT signing secret. |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | No | JWT access token lifetime. |
@@ -31,6 +32,7 @@
 | `CORS_ORIGINS` | No | JSON array of allowed browser origins. |
 | `NEXT_PUBLIC_API_URL` | No | Browser-visible API base URL. Empty value uses same origin. |
 | `BACKUP_DIR` | No | Directory used by backup script. |
+| `BACKUP_RETENTION_COUNT` | No | Number of shell backup archives to keep in retention dry-run reports. |
 | `INCLUDE_SECRETS_IN_BACKUP` | No | Includes `.env` in backup archives only when set to `true`. Use encrypted storage. |
 
 Uploaded files, OCR artifacts, and backup archives should be stored on persistent disk. PostgreSQL backups do not include file bytes; the backup script copies `RECEIPT_STORAGE_PATH`, `ASSET_STORAGE_PATH`, `VAULT_STORAGE_PATH`, and `OCR_STORAGE_PATH` separately.

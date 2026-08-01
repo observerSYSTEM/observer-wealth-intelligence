@@ -59,3 +59,10 @@
 - Further runtime optimization for low-memory Raspberry Pi devices.
 - Broader read-only offline views after explicit privacy review.
 - Backup retention policies and encrypted off-device replication.
+
+## v1.0 RC1: Raspberry Pi Release Readiness
+
+- Version `1.0.0-rc.1`.
+- Release branch `release/v1.0-rc1`.
+- Raspberry Pi 5 preflight, runtime validation, security review, backup and restore drill, PWA validation, and performance measurements.
+- No new product features; only runtime validation, hardening, documentation, and release readiness.

@@ -7,6 +7,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     app_name: str = "Observer Wealth Intelligence"
+    app_version: str = "1.0.0-rc.1"
     environment: Literal["development", "test", "production"] = "development"
     api_v1_prefix: str = "/api/v1"
     secret_key: str = Field(default="development-secret-change-before-production", min_length=32)

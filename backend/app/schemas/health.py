@@ -7,3 +7,4 @@ class HealthRead(BaseModel):
     status: Literal["ok"]
     database: Literal["ok"]
     environment: str
+    version: str

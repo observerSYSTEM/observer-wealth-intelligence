@@ -21,6 +21,7 @@ import type { ReactNode } from "react";
 
 import { useAuth } from "@/components/auth-provider";
 import { ConnectionStatus } from "@/components/connection-status";
+import { OfflineBanner } from "@/components/offline-banner";
 import { ThemeToggle } from "@/components/theme-toggle";
 
 export function AppFrame({ children }: { children: ReactNode }) {
@@ -145,6 +146,7 @@ export function AppFrame({ children }: { children: ReactNode }) {
             </button>
           </nav>
         </header>
+        <OfflineBanner />
         {children}
       </div>
     </main>

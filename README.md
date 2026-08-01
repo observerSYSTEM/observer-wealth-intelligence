@@ -22,7 +22,7 @@ Actual savings are the source of truth for totals. Saving above the recommended 
 
 ## Dashboard 3.0
 
-The dashboard uses authenticated-user data only. It shows total assets, tracked savings, cash, investments, property, crypto, business, trading accounts, goal progress, active goals, pending OCR reviews, unread notifications, latest backup verification, asset allocation, portfolio growth, recent assets, recent receipts, latest entries, recent timeline events, and daily savings.
+The dashboard uses authenticated-user data only. It shows total assets, tracked savings, cash, investments, property, crypto, business, trading accounts, goal progress, active goals, pending OCR reviews, notifications requiring review, latest backup verification, asset allocation, portfolio growth, recent assets, recent receipts, latest entries, recent timeline events, and daily savings.
 
 Goal progress and portfolio cards use the configured primary goal currency only. The app does not perform foreign-exchange conversion yet, so values in other currencies are stored and shown separately.
 
@@ -89,6 +89,23 @@ docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build -d
 The production reverse proxy serves the app on `http://localhost:8080`.
 
 Production deployments must use a strong `SECRET_KEY` and secure cookies. Set `COOKIE_SECURE=true` when serving over HTTPS.
+
+## Raspberry Pi RC1
+
+RC1 version metadata is `1.0.0-rc.1`. Run the Raspberry Pi preflight before deployment:
+
+```bash
+./deploy/preflight-pi.sh
+```
+
+Operational commands and the release checklist are documented in `docs/RASPBERRY_PI_OPERATIONS.md` and `docs/RELEASE_CHECKLIST.md`. If this repository has no remote configured, connect a private GitHub repository with:
+
+```bash
+git remote add origin git@github.com:<owner>/<private-repository>.git
+git push -u origin release/v1.0-rc1
+```
+
+Do not tag `v1.0.0-rc.1` until Raspberry Pi runtime validation succeeds.
 
 ## Authentication
 

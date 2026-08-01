@@ -19,6 +19,8 @@ if [ ! -f .env ]; then
 fi
 
 mkdir -p data/backups data/assets data/vault data/receipts data/ocr
+sudo chown -R 10001:"$(id -g)" data
+sudo chmod -R u+rwX,g+rwX,o-rwx data
 sudo install -m 0644 deploy/systemd/observer-wealth-intelligence.service "$SERVICE_FILE"
 sudo install -m 0644 deploy/systemd/observer-wealth-backup.service "$BACKUP_SERVICE_FILE"
 sudo install -m 0644 deploy/systemd/observer-wealth-backup.timer "$BACKUP_TIMER_FILE"

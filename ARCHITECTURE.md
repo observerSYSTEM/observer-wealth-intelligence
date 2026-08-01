@@ -122,7 +122,7 @@ Supported statuses are `active`, `sold`, `closed`, and `archived`.
 
 Value history is append-only. Creating an asset writes the first `asset_value_history` row. Updating `current_value` through either the asset update endpoint or value-history endpoint writes a new history row with previous value, new value, currency, valuation date, source, notes, and recorded timestamp. Existing history is never rewritten.
 
-For Dashboard 2.0 and portfolio summaries, active assets in the primary goal currency are aggregated by category. Tracked savings in the primary goal currency are included in cash and total assets. Other currencies are stored and shown separately; no FX conversion is performed.
+For Dashboard 3.0 and portfolio summaries, active assets in the primary goal currency are aggregated by category. Tracked savings in the primary goal currency are included in cash and total assets. Other currencies are stored and shown separately; no FX conversion is performed.
 
 ## Digital Vault Architecture
 
@@ -134,7 +134,7 @@ Asset-attached documents use the same metadata table with `storage_area=asset`, 
 
 ## OCR Architecture
 
-OCR is a review-first foundation. Jobs run against an existing receipt or vault document. The OCR service validates ownership, reads the source file from secure storage, calls the EasyOCR adapter, extracts text, parses amount, currency, date, time, and reference, and writes an `ocr_results` row with `status=pending_review`.
+OCR is a review-first foundation. Jobs run against an existing receipt or vault document. The API creates `pending` jobs, and the `ocr-worker` service validates ownership, reads the source file from secure storage, calls the EasyOCR adapter, extracts text, parses amount, currency, date, time, reference, recipient, and sender, then writes a review row with `status=review_required` or `status=failed`.
 
 Confirmation is explicit through the OCR confirmation endpoint. Confirming an OCR result updates only the OCR result row. It does not mutate receipts, vault documents, entries, or assets. The original uploaded file is never overwritten.
 
@@ -148,7 +148,7 @@ The unified timeline is computed from existing records instead of duplicating hi
 
 ## Notification Architecture
 
-Notifications are stored in `notifications`. In-app notifications default to `unread`, support read/read-all operations, and are owner-scoped by user id. Optional Telegram delivery is disabled by default and only runs when Telegram settings are present. Telegram delivery failures are stored on the notification row and do not block the in-app notification.
+Notifications are stored in `notifications`. In-app notifications use pending, sent, failed, cancelled, and read states. Notification preferences control in-app, Telegram, reminders, summaries, quiet hours, and alert categories. Optional Telegram delivery is disabled by default and only runs when environment settings and user preferences allow it. Telegram delivery failures are stored on the notification row and do not block in-app notifications.
 
 ## Automation And Backup Architecture
 
@@ -164,7 +164,7 @@ Global search is owner-scoped and searches asset names, notes, institutions, ref
 
 ## Dashboard And Streaks
 
-Daily-savings dashboard totals use `actual_savings`, not recommended savings. Dashboard 3.0 adds total assets, cash, investments, property, crypto, business, trading accounts, asset allocation, portfolio growth, recent assets, recent receipts, active goals, pending OCR reviews, unread notifications, recent notifications, recent timeline events, and latest backup verification status. The primary goal progress calculation only includes entries and assets in `primary_goal_currency`; there is no foreign-exchange conversion in this milestone.
+Daily-savings dashboard totals use `actual_savings`, not recommended savings. Dashboard 3.0 adds total assets, cash, investments, property, crypto, business, trading accounts, asset allocation, portfolio growth, recent assets, recent receipts, active goals, pending OCR reviews, notifications requiring read, recent notifications, recent timeline events, and latest backup verification status. The primary goal progress calculation only includes entries and assets in `primary_goal_currency`; there is no foreign-exchange conversion in this milestone.
 
 The savings streak counts consecutive eligible saving days on which every positive-profit entry for that date met or exceeded the target. Weekends and days without entries do not automatically break the streak. Losing, zero-profit, and no-trade days are ignored. A positive-profit day with any below-target entry breaks the streak.
 

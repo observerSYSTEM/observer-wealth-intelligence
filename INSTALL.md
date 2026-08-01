@@ -19,6 +19,7 @@ Set `SECRET_KEY` to a strong random value before any shared or production deploy
 Uploaded files and OCR artifacts are stored outside PostgreSQL. The default layout is:
 
 ```bash
+APP_VERSION=1.0.0-rc.1
 RECEIPT_STORAGE_PATH=data/receipts
 RECEIPT_MAX_FILE_SIZE_BYTES=10485760
 ASSET_STORAGE_PATH=data/assets
@@ -84,7 +85,10 @@ sudo mkdir -p /opt/observer-wealth-intelligence
 sudo chown "$USER:$USER" /opt/observer-wealth-intelligence
 git clone <repository-url> /opt/observer-wealth-intelligence
 cd /opt/observer-wealth-intelligence
+git switch release/v1.0-rc1
 cp .env.example .env
+nano .env
+./deploy/preflight-pi.sh
 chmod +x deploy/*.sh docker/backend/entrypoint.sh
 ./deploy/install-pi.sh
 ```

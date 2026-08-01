@@ -221,7 +221,7 @@ def create_backup_archive(
         "backup_id": backup.id,
         "created_at": now.isoformat(),
         "dry_run": dry_run,
-        "application_version": "1.0.0",
+        "application_version": settings.app_version,
         "migration_revision": "20260801_0005",
         "storage_areas": ["assets", "vault", "receipts", "ocr"],
         "database": {

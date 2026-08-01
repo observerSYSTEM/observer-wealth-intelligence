@@ -12,4 +12,9 @@ router = APIRouter()
 @router.get("/health", response_model=HealthRead)
 def read_health(db: Session = Depends(get_db)) -> HealthRead:
     db.execute(text("SELECT 1"))
-    return HealthRead(status="ok", database="ok", environment=settings.environment)
+    return HealthRead(
+        status="ok",
+        database="ok",
+        environment=settings.environment,
+        version=settings.app_version,
+    )

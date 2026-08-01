@@ -44,7 +44,7 @@ Each receipt can be linked to one entry. Entry deletion keeps receipt metadata. 
 
 ## Dashboard
 
-The dashboard summarizes authenticated-user entries, assets, receipts, goals, OCR results, notifications, timeline events, and backups. Dashboard 3.0 shows total assets, tracked savings, cash, investments, property, crypto, business, trading accounts, asset allocation, portfolio growth, recent assets, recent receipts, latest entries, goal progress, active goals, pending OCR reviews, unread notifications, latest backup status, and recent timeline events. Goal progress and cards use only the primary goal currency; no FX conversion is performed in this milestone. Other currencies are stored and shown separately.
+The dashboard summarizes authenticated-user entries, assets, receipts, goals, OCR results, notifications, timeline events, and backups. Dashboard 3.0 shows total assets, tracked savings, cash, investments, property, crypto, business, trading accounts, asset allocation, portfolio growth, recent assets, recent receipts, latest entries, goal progress, active goals, pending OCR reviews, notifications requiring read, latest backup status, and recent timeline events. Goal progress and cards use only the primary goal currency; no FX conversion is performed in this milestone. Other currencies are stored and shown separately.
 
 The saving streak counts consecutive eligible positive-profit days where all entries met or exceeded target. Days with no entries, weekends, zero-profit entries, or losing entries are ignored; a positive-profit below-target day breaks the streak.
 

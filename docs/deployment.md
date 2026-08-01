@@ -19,6 +19,7 @@ Production mode runs the backend behind Nginx and serves the Next.js standalone 
 ## Raspberry Pi
 
 ```bash
+./deploy/preflight-pi.sh
 ./deploy/install-pi.sh
 ```
 
