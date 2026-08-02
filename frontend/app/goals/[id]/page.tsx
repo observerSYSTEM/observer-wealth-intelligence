@@ -41,8 +41,8 @@ export default function GoalDetailPage() {
 
   async function loadGoal() {
     const [goalData, contributionData] = await Promise.all([
-      apiFetch<Goal>(`/api/v1/goals/${params.id}`),
-      apiFetch<ContributionList>(`/api/v1/goals/${params.id}/contributions`)
+      apiFetch<Goal>(`goals/${params.id}`),
+      apiFetch<ContributionList>(`goals/${params.id}/contributions`)
     ]);
     setGoal(goalData);
     setContributions(contributionData.items);
@@ -53,8 +53,8 @@ export default function GoalDetailPage() {
     async function load() {
       try {
         const [goalData, contributionData] = await Promise.all([
-          apiFetch<Goal>(`/api/v1/goals/${params.id}`),
-          apiFetch<ContributionList>(`/api/v1/goals/${params.id}/contributions`)
+          apiFetch<Goal>(`goals/${params.id}`),
+          apiFetch<ContributionList>(`goals/${params.id}/contributions`)
         ]);
         if (active) {
           setGoal(goalData);
@@ -77,7 +77,7 @@ export default function GoalDetailPage() {
     setError(null);
     setMessage(null);
     try {
-      await apiFetch<GoalContribution>(`/api/v1/goals/${goal.id}/contributions`, {
+      await apiFetch<GoalContribution>(`goals/${goal.id}/contributions`, {
         method: "POST",
         body: JSON.stringify({
           amount: form.amount,
@@ -100,7 +100,7 @@ export default function GoalDetailPage() {
     if (!goal || !deleteContributionId) return;
     setError(null);
     try {
-      await apiFetch(`/api/v1/goals/${goal.id}/contributions/${deleteContributionId}`, {
+      await apiFetch(`goals/${goal.id}/contributions/${deleteContributionId}`, {
         method: "DELETE"
       });
       setDeleteContributionId(null);
@@ -114,7 +114,7 @@ export default function GoalDetailPage() {
     if (!goal) return;
     setError(null);
     try {
-      await apiFetch(`/api/v1/goals/${goal.id}`, { method: "DELETE" });
+      await apiFetch(`goals/${goal.id}`, { method: "DELETE" });
       router.replace("/goals");
     } catch (archiveError) {
       setError(errorMessage(archiveError));

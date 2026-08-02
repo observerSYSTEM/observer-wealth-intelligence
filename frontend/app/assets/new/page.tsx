@@ -35,7 +35,7 @@ export default function NewAssetPage() {
     setSaving(true);
     setError(null);
     try {
-      const asset = await apiFetch<Asset>("/api/v1/assets", {
+      const asset = await apiFetch<Asset>("assets", {
         method: "POST",
         body: JSON.stringify({
           category,

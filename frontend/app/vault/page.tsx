@@ -31,7 +31,7 @@ export default function VaultPage() {
     let active = true;
     async function loadFolders() {
       try {
-        const data = await apiFetch<VaultFolderSummary[]>("/api/v1/vault/folders");
+        const data = await apiFetch<VaultFolderSummary[]>("vault/folders");
         if (active) setFolders(data);
       } catch (loadError) {
         if (active) setError(errorMessage(loadError));
@@ -55,7 +55,7 @@ export default function VaultPage() {
       return;
     }
     try {
-      const data = await apiFetch<SearchResults>(`/api/v1/search?q=${encodeURIComponent(query)}`);
+      const data = await apiFetch<SearchResults>(`search?q=${encodeURIComponent(query)}`);
       setResults(data);
       setError(null);
     } catch (searchError) {

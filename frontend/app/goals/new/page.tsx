@@ -50,7 +50,7 @@ export default function NewGoalPage() {
     setSaving(true);
     setError(null);
     try {
-      const goal = await apiFetch<Goal>("/api/v1/goals", {
+      const goal = await apiFetch<Goal>("goals", {
         method: "POST",
         body: JSON.stringify({
           ...form,

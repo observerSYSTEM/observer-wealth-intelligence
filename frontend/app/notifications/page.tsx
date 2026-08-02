@@ -27,10 +27,10 @@ export default function NotificationsPage() {
   const [message, setMessage] = useState<string | null>(null);
 
   async function loadNotifications() {
-    const data = await apiFetch<NotificationList>("/api/v1/notifications?limit=100");
+    const data = await apiFetch<NotificationList>("notifications?limit=100");
     setNotifications(data.items);
     setUnreadCount(data.unread_count);
-    setPreferences(await apiFetch<NotificationPreference>("/api/v1/notification-preferences"));
+    setPreferences(await apiFetch<NotificationPreference>("notification-preferences"));
   }
 
   useEffect(() => {
@@ -38,8 +38,8 @@ export default function NotificationsPage() {
     async function load() {
       try {
         const [data, preferenceData] = await Promise.all([
-          apiFetch<NotificationList>("/api/v1/notifications?limit=100"),
-          apiFetch<NotificationPreference>("/api/v1/notification-preferences")
+          apiFetch<NotificationList>("notifications?limit=100"),
+          apiFetch<NotificationPreference>("notification-preferences")
         ]);
         if (active) {
           setNotifications(data.items);
@@ -59,7 +59,7 @@ export default function NotificationsPage() {
   async function markRead(notificationId: string) {
     setError(null);
     try {
-      await apiFetch<Notification>(`/api/v1/notifications/${notificationId}/read`, {
+      await apiFetch<Notification>(`notifications/${notificationId}/read`, {
         method: "PATCH"
       });
       await loadNotifications();
@@ -72,7 +72,7 @@ export default function NotificationsPage() {
     setError(null);
     setMessage(null);
     try {
-      const response = await apiFetch<{ message: string }>("/api/v1/notifications/read-all", {
+      const response = await apiFetch<{ message: string }>("notifications/read-all", {
         method: "POST"
       });
       setMessage(response.message);
@@ -88,7 +88,7 @@ export default function NotificationsPage() {
     setError(null);
     setMessage(null);
     try {
-      const updated = await apiFetch<NotificationPreference>("/api/v1/notification-preferences", {
+      const updated = await apiFetch<NotificationPreference>("notification-preferences", {
         method: "PATCH",
         body: JSON.stringify({
           telegram_enabled: preferences.telegram_enabled,
@@ -114,7 +114,7 @@ export default function NotificationsPage() {
     setError(null);
     setMessage(null);
     try {
-      await apiFetch<Notification>("/api/v1/notifications/test-telegram", { method: "POST" });
+      await apiFetch<Notification>("notifications/test-telegram", { method: "POST" });
       setMessage("Telegram test queued.");
       await loadNotifications();
     } catch (telegramError) {

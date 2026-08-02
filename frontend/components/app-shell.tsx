@@ -128,7 +128,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     let active = true;
     async function loadShellSummary() {
       try {
-        const data = await apiFetch<DashboardSummary>("/api/v1/dashboard/summary");
+        const data = await apiFetch<DashboardSummary>("dashboard/summary");
         if (active) setSummary(data);
       } catch {
         if (active) setSummary(null);
@@ -716,7 +716,7 @@ export function NotificationDrawer({ open, onClose }: { open: boolean; onClose: 
   const [error, setError] = useState<string | null>(null);
 
   async function loadNotifications() {
-    const data = await apiFetch<NotificationList>("/api/v1/notifications?limit=8");
+    const data = await apiFetch<NotificationList>("notifications?limit=8");
     setNotifications(data.items);
     setUnreadCount(data.unread_count);
   }
@@ -726,7 +726,7 @@ export function NotificationDrawer({ open, onClose }: { open: boolean; onClose: 
     let active = true;
     async function load() {
       try {
-        const data = await apiFetch<NotificationList>("/api/v1/notifications?limit=8");
+        const data = await apiFetch<NotificationList>("notifications?limit=8");
         if (active) {
           setNotifications(data.items);
           setUnreadCount(data.unread_count);
@@ -744,7 +744,7 @@ export function NotificationDrawer({ open, onClose }: { open: boolean; onClose: 
 
   async function markRead(notificationId: string) {
     try {
-      await apiFetch<Notification>(`/api/v1/notifications/${notificationId}/read`, {
+      await apiFetch<Notification>(`notifications/${notificationId}/read`, {
         method: "PATCH"
       });
       await loadNotifications();

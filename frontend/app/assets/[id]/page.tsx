@@ -31,9 +31,9 @@ export default function AssetDetailPage() {
 
   const loadAsset = useCallback(async () => {
     const [assetData, historyData, documentsData] = await Promise.all([
-      apiFetch<Asset>(`/api/v1/assets/${params.id}`),
-      apiFetch<AssetHistoryList>(`/api/v1/assets/${params.id}/history`),
-      apiFetch<VaultDocumentList>(`/api/v1/assets/${params.id}/documents`)
+      apiFetch<Asset>(`assets/${params.id}`),
+      apiFetch<AssetHistoryList>(`assets/${params.id}/history`),
+      apiFetch<VaultDocumentList>(`assets/${params.id}/documents`)
     ]);
     setAsset(assetData);
     setCurrentValue(assetData.current_value);
@@ -63,7 +63,7 @@ export default function AssetDetailPage() {
     setError(null);
     setMessage(null);
     try {
-      const updated = await apiFetch<Asset>(`/api/v1/assets/${params.id}`, {
+      const updated = await apiFetch<Asset>(`assets/${params.id}`, {
         method: "PATCH",
         body: JSON.stringify({
           current_value: currentValue,
@@ -74,7 +74,7 @@ export default function AssetDetailPage() {
       setAsset(updated);
       setHistoryNotes("");
       setMessage("Asset saved.");
-      const historyData = await apiFetch<AssetHistoryList>(`/api/v1/assets/${params.id}/history`);
+      const historyData = await apiFetch<AssetHistoryList>(`assets/${params.id}/history`);
       setHistory(historyData.items);
     } catch (saveError) {
       setError(errorMessage(saveError));
@@ -92,7 +92,7 @@ export default function AssetDetailPage() {
     if (documentNotes) form.append("notes", documentNotes);
     form.append("document", file);
     try {
-      await apiFetch<VaultDocument>(`/api/v1/assets/${params.id}/documents`, {
+      await apiFetch<VaultDocument>(`assets/${params.id}/documents`, {
         method: "POST",
         body: form
       });
@@ -189,7 +189,7 @@ export default function AssetDetailPage() {
                   </button>
                   <div className="mt-4 space-y-2">
                     {documents.map((document) => (
-                      <a key={document.id} href={apiUrl(`/api/v1/vault/documents/${document.id}/content`)} className="flex items-center justify-between gap-3 rounded-md border border-black/10 p-3 text-sm hover:bg-mist dark:border-white/10 dark:hover:bg-white/10">
+                      <a key={document.id} href={apiUrl(`vault/documents/${document.id}/content`)} className="flex items-center justify-between gap-3 rounded-md border border-black/10 p-3 text-sm hover:bg-mist dark:border-white/10 dark:hover:bg-white/10">
                         <span className="truncate">{document.original_filename}</span>
                         <span className="flex items-center gap-2 text-black/60 dark:text-white/60">
                           {formatFileSize(document.file_size)}

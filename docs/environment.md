@@ -30,7 +30,7 @@
 | `POSTGRES_USER` | No | PostgreSQL user used by Docker Compose. |
 | `POSTGRES_PASSWORD` | Yes for Compose | PostgreSQL password used by Docker Compose. Required and intentionally blank in `.env.example`. |
 | `CORS_ORIGINS` | No | JSON array of allowed browser origins. |
-| `NEXT_PUBLIC_API_URL` | No | Browser-visible API origin. Empty value uses same origin; do not include `/api` because client paths already start with `/api/v1`. |
+| `NEXT_PUBLIC_API_URL` | No | Browser-visible API origin. Empty value uses same origin; API path resolution is owned by `frontend/lib/api.ts`. |
 | `BACKUP_DIR` | No | Directory used by backup script. |
 | `BACKUP_RETENTION_COUNT` | No | Number of shell backup archives to keep in retention dry-run reports. |
 | `INCLUDE_SECRETS_IN_BACKUP` | No | Includes `.env` in backup archives only when set to `true`. Use encrypted storage. |

@@ -50,7 +50,7 @@ function ProfileForms({ user }: { user: User }) {
     }
     setSavingProfile(true);
     try {
-      await apiFetch<User>("/api/v1/users/me", {
+      await apiFetch<User>("users/me", {
         method: "PATCH",
         body: JSON.stringify({
           display_name: displayName,
@@ -79,7 +79,7 @@ function ProfileForms({ user }: { user: User }) {
     }
     setSavingPassword(true);
     try {
-      await apiFetch("/api/v1/users/me/password", {
+      await apiFetch("users/me/password", {
         method: "PUT",
         body: JSON.stringify({
           current_password: currentPassword,

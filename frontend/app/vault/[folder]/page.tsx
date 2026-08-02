@@ -43,7 +43,7 @@ export default function VaultFolderPage() {
   const loadDocuments = useCallback(async () => {
     const paramsQuery = new URLSearchParams({ folder });
     if (search) paramsQuery.set("search", search);
-    const data = await apiFetch<VaultDocumentList>(`/api/v1/vault/documents?${paramsQuery.toString()}`);
+    const data = await apiFetch<VaultDocumentList>(`vault/documents?${paramsQuery.toString()}`);
     setDocuments(data.items);
   }, [folder, search]);
 
@@ -79,7 +79,7 @@ export default function VaultFolderPage() {
     if (notes) form.append("notes", notes);
     form.append("document", file);
     try {
-      await apiFetch<VaultDocument>("/api/v1/vault/documents", { method: "POST", body: form });
+      await apiFetch<VaultDocument>("vault/documents", { method: "POST", body: form });
       setFile(null);
       setTags("");
       setNotes("");
@@ -95,7 +95,7 @@ export default function VaultFolderPage() {
   async function previewDocument(document: VaultDocument) {
     setError(null);
     try {
-      const blob = await apiBlob(`/api/v1/vault/documents/${document.id}/content`);
+      const blob = await apiBlob(`vault/documents/${document.id}/content`);
       if (previewUrl) URL.revokeObjectURL(previewUrl);
       setPreviewUrl(URL.createObjectURL(blob));
       setPreviewType(document.media_type);
@@ -108,7 +108,7 @@ export default function VaultFolderPage() {
     if (!deleteId) return;
     setError(null);
     try {
-      await apiFetch(`/api/v1/vault/documents/${deleteId}`, { method: "DELETE" });
+      await apiFetch(`vault/documents/${deleteId}`, { method: "DELETE" });
       setDocuments((current) => current.filter((document) => document.id !== deleteId));
       setDeleteId(null);
     } catch (deleteError) {
@@ -121,7 +121,7 @@ export default function VaultFolderPage() {
     setError(null);
     setMessage(null);
     try {
-      const result = await apiFetch<OCRResult>("/api/v1/ocr/jobs", {
+      const result = await apiFetch<OCRResult>("ocr/jobs", {
         method: "POST",
         body: JSON.stringify({ source_type: "vault_document", source_id: document.id })
       });
@@ -227,7 +227,7 @@ export default function VaultFolderPage() {
                       <button type="button" title="Preview" onClick={() => void previewDocument(document)} className={buttonSecondaryClass}>
                         <Eye className="h-4 w-4" aria-hidden="true" />
                       </button>
-                      <a title="Download" href={apiUrl(`/api/v1/vault/documents/${document.id}/content`)} className={buttonSecondaryClass}>
+                      <a title="Download" href={apiUrl(`vault/documents/${document.id}/content`)} className={buttonSecondaryClass}>
                         <Download className="h-4 w-4" aria-hidden="true" />
                       </a>
                       <button type="button" title="Run OCR" disabled={busy} onClick={() => void runOcr(document)} className={buttonSecondaryClass}>

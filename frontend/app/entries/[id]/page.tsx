@@ -26,7 +26,7 @@ export default function EntryDetailPage() {
     let active = true;
     async function loadEntry() {
       try {
-        const data = await apiFetch<WealthEntry>(`/api/v1/entries/${params.id}`);
+        const data = await apiFetch<WealthEntry>(`entries/${params.id}`);
         if (active) {
           setEntry(data);
           setActualSavings(data.actual_savings);
@@ -49,7 +49,7 @@ export default function EntryDetailPage() {
     setError(null);
     setMessage(null);
     try {
-      const updated = await apiFetch<WealthEntry>(`/api/v1/entries/${params.id}`, {
+      const updated = await apiFetch<WealthEntry>(`entries/${params.id}`, {
         method: "PATCH",
         body: JSON.stringify({
           actual_savings: actualSavings,
@@ -70,7 +70,7 @@ export default function EntryDetailPage() {
 
   async function deleteEntry() {
     if (!window.confirm("Delete this entry?")) return;
-    await apiFetch(`/api/v1/entries/${params.id}`, { method: "DELETE" });
+    await apiFetch(`entries/${params.id}`, { method: "DELETE" });
     router.replace("/entries");
   }
 

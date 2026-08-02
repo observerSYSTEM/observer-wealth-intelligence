@@ -54,7 +54,7 @@ export function DashboardShell() {
     let active = true;
     async function loadSummary() {
       try {
-        const data = await apiFetch<DashboardSummary>("/api/v1/dashboard/summary");
+        const data = await apiFetch<DashboardSummary>("dashboard/summary");
         if (active) {
           setSummary(data);
           setSelectedCurrency(data.tracked_savings_currency || "GBP");

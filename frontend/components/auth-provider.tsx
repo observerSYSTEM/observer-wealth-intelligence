@@ -39,7 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshAuth = useCallback(async () => {
     const setup = await apiFetch<SetupStatus>(
-      "/api/v1/auth/setup-status",
+      "auth/setup-status",
       {},
       { retryOnUnauthorized: false }
     );
@@ -52,7 +52,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     try {
-      const currentUser = await apiFetch<User>("/api/v1/auth/me");
+      const currentUser = await apiFetch<User>("auth/me");
       setUser(currentUser);
       setStatus("authenticated");
     } catch {
@@ -81,7 +81,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [router]);
 
   const registerOwner = useCallback(async (payload: Record<string, string>) => {
-    const session = await apiFetch<AuthSession>("/api/v1/auth/register", {
+    const session = await apiFetch<AuthSession>("auth/register", {
       method: "POST",
       body: JSON.stringify(payload)
     });
@@ -92,7 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const login = useCallback(async (payload: Record<string, string>) => {
-    const session = await apiFetch<AuthSession>("/api/v1/auth/login", {
+    const session = await apiFetch<AuthSession>("auth/login", {
       method: "POST",
       body: JSON.stringify(payload)
     });
@@ -103,7 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     try {
-      await apiFetch("/api/v1/auth/logout", { method: "POST" }, { retryOnUnauthorized: false });
+      await apiFetch("auth/logout", { method: "POST" }, { retryOnUnauthorized: false });
     } finally {
       setUser(null);
       setStatus("unauthenticated");

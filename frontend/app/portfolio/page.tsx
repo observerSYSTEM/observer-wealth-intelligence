@@ -46,7 +46,7 @@ export default function PortfolioPage() {
     let active = true;
     async function loadPortfolio() {
       try {
-        const data = await apiFetch<PortfolioSummary>("/api/v1/portfolio/summary");
+        const data = await apiFetch<PortfolioSummary>("portfolio/summary");
         if (active) {
           setSummary(data);
           setCurrency(data.primary_currency || "GBP");

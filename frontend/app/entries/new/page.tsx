@@ -57,7 +57,7 @@ export default function NewEntryPage() {
     let active = true;
     async function loadSettings() {
       try {
-        const data = await apiFetch<AppSettings>("/api/v1/settings");
+        const data = await apiFetch<AppSettings>("settings");
         if (active) setSettings(data);
       } catch (loadError) {
         if (active) setError(errorMessage(loadError));
@@ -90,7 +90,7 @@ export default function NewEntryPage() {
       if (receiptFile && !receiptId) {
         const form = new FormData();
         form.append("receipt", receiptFile);
-        const receipt = await apiFetch<{ id: string }>("/api/v1/receipts", {
+        const receipt = await apiFetch<{ id: string }>("receipts", {
           method: "POST",
           body: form
         });
@@ -98,7 +98,7 @@ export default function NewEntryPage() {
         setUploadedReceiptId(receipt.id);
       }
 
-      const entry = await apiFetch<WealthEntry>("/api/v1/entries", {
+      const entry = await apiFetch<WealthEntry>("entries", {
         method: "POST",
         body: JSON.stringify({
           entry_date: entryDate,

@@ -28,7 +28,7 @@ export default function TimelinePage() {
     let active = true;
     async function loadTimeline() {
       try {
-        const data = await apiFetch<TimelineList>("/api/v1/timeline?limit=100");
+        const data = await apiFetch<TimelineList>("timeline?limit=100");
         if (active) {
           setEvents(data.items);
           setTotal(data.total);

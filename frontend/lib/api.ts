@@ -52,6 +52,15 @@ function canonicalApiPath(path: string) {
   return `${apiVersionPath}${suffix}${querySuffix}${hashSuffix}`;
 }
 
+function canonicalResourcePath(path: string) {
+  const canonicalPath = canonicalApiPath(path);
+  const resourcePrefix = `${apiVersionPath}/`;
+  if (canonicalPath === apiVersionPath) return "";
+  return canonicalPath.startsWith(resourcePrefix)
+    ? canonicalPath.slice(resourcePrefix.length)
+    : canonicalPath;
+}
+
 const apiBaseOrigin = normalizeApiBaseOrigin(configuredApiUrl);
 
 export function apiUrl(path: string) {
@@ -83,14 +92,14 @@ export class ApiError extends Error {
 
 const offlineCachePrefix = "owi:offline:";
 const cacheableReadPrefixes = [
-  "/api/v1/dashboard/summary",
-  "/api/v1/goals",
-  "/api/v1/timeline",
-  "/api/v1/portfolio/summary",
-  "/api/v1/assets",
-  "/api/v1/receipts",
-  "/api/v1/vault",
-  "/api/v1/notifications"
+  "dashboard/summary",
+  "goals",
+  "timeline",
+  "portfolio/summary",
+  "assets",
+  "receipts",
+  "vault",
+  "notifications"
 ];
 
 function canUseBrowserStorage() {
@@ -102,11 +111,12 @@ function isOffline() {
 }
 
 function cacheKey(path: string) {
-  return `${offlineCachePrefix}${path}`;
+  return `${offlineCachePrefix}${canonicalResourcePath(path)}`;
 }
 
 function isCacheableRead(path: string, method: string) {
-  return method === "GET" && cacheableReadPrefixes.some((prefix) => path.startsWith(prefix));
+  const resourcePath = canonicalResourcePath(path);
+  return method === "GET" && cacheableReadPrefixes.some((prefix) => resourcePath.startsWith(prefix));
 }
 
 function readCached<T>(path: string): T | null {
@@ -163,7 +173,7 @@ async function parseError(response: Response) {
 let refreshPromise: Promise<boolean> | null = null;
 
 async function refreshSession() {
-  refreshPromise ??= apiFetch("/api/v1/auth/refresh", { method: "POST" }, { retryOnUnauthorized: false })
+  refreshPromise ??= apiFetch("auth/refresh", { method: "POST" }, { retryOnUnauthorized: false })
     .then(() => true)
     .catch(() => false)
     .finally(() => {
@@ -180,14 +190,15 @@ export async function apiFetch<T>(
   const retryOnUnauthorized = options.retryOnUnauthorized ?? true;
   const headers = new Headers(init.headers);
   const method = (init.method ?? "GET").toUpperCase();
-  const cacheable = isCacheableRead(path, method);
+  const resourcePath = canonicalResourcePath(path);
+  const cacheable = isCacheableRead(resourcePath, method);
 
   if (!["GET", "HEAD", "OPTIONS"].includes(method) && isOffline()) {
     throw new ApiError(0, "You are offline. Reconnect before changing private data.");
   }
 
   if (cacheable && isOffline()) {
-    const cached = readCached<T>(path);
+    const cached = readCached<T>(resourcePath);
     if (cached !== null) return cached;
   }
 
@@ -214,13 +225,13 @@ export async function apiFetch<T>(
       console.warn("OWI API network failure", { path, method, error });
     }
     if (cacheable) {
-      const cached = readCached<T>(path);
+      const cached = readCached<T>(resourcePath);
       if (cached !== null) return cached;
     }
     throw new ApiError(0, "Network request failed. Check the backend connection.");
   }
 
-  if (response.status === 401 && retryOnUnauthorized && path !== "/api/v1/auth/refresh") {
+  if (response.status === 401 && retryOnUnauthorized && resourcePath !== "auth/refresh") {
     const refreshed = await refreshSession();
     if (refreshed) {
       return apiFetch<T>(path, init, { retryOnUnauthorized: false });
@@ -236,7 +247,7 @@ export async function apiFetch<T>(
     return undefined as T;
   }
   const payload = (await response.json()) as T;
-  if (cacheable) writeCached(path, payload);
+  if (cacheable) writeCached(resourcePath, payload);
   return payload;
 }
 

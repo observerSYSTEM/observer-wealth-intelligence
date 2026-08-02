@@ -37,7 +37,7 @@ export default function OCRResultPage() {
   const [busy, setBusy] = useState(false);
 
   async function loadResult() {
-    const data = await apiFetch<OCRResult>(`/api/v1/ocr/results/${params.id}`);
+    const data = await apiFetch<OCRResult>(`ocr/results/${params.id}`);
     setResult(data);
     setForm({
       amount: data.amount ?? "",
@@ -54,7 +54,7 @@ export default function OCRResultPage() {
     let active = true;
     async function load() {
       try {
-        const data = await apiFetch<OCRResult>(`/api/v1/ocr/results/${params.id}`);
+        const data = await apiFetch<OCRResult>(`ocr/results/${params.id}`);
         if (active) {
           setResult(data);
           setForm({
@@ -84,7 +84,7 @@ export default function OCRResultPage() {
     setError(null);
     setMessage(null);
     try {
-      const updated = await apiFetch<OCRResult>(`/api/v1/ocr/results/${result.id}/confirm`, {
+      const updated = await apiFetch<OCRResult>(`ocr/results/${result.id}/confirm`, {
         method: "PATCH",
         body: JSON.stringify({
           amount: form.amount || null,
@@ -112,7 +112,7 @@ export default function OCRResultPage() {
     setError(null);
     setMessage(null);
     try {
-      await apiFetch<OCRResult>(`/api/v1/ocr/results/${result.id}/${path}`, {
+      await apiFetch<OCRResult>(`ocr/results/${result.id}/${path}`, {
         method: "POST"
       });
       setMessage(success);

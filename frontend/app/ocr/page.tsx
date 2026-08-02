@@ -34,7 +34,7 @@ export default function OCRReviewPage() {
   const [message, setMessage] = useState<string | null>(null);
 
   async function loadResults() {
-    const data = await apiFetch<OCRResultList>("/api/v1/ocr/results?status=review_required&limit=100");
+    const data = await apiFetch<OCRResultList>("ocr/results?status=review_required&limit=100");
     setResults(data.items);
   }
 
@@ -43,7 +43,7 @@ export default function OCRReviewPage() {
     async function load() {
       try {
         const data = await apiFetch<OCRResultList>(
-          "/api/v1/ocr/results?status=review_required&limit=100"
+          "ocr/results?status=review_required&limit=100"
         );
         if (active) setResults(data.items);
       } catch (loadError) {
@@ -121,7 +121,7 @@ function ReviewCard({
     setSaving(true);
     onError(null);
     try {
-      await apiFetch<OCRResult>(`/api/v1/ocr/results/${result.id}/confirm`, {
+      await apiFetch<OCRResult>(`ocr/results/${result.id}/confirm`, {
         method: "PATCH",
         body: JSON.stringify({
           amount: form.amount || null,
@@ -146,7 +146,7 @@ function ReviewCard({
     setSaving(true);
     onError(null);
     try {
-      await apiFetch<OCRResult>(`/api/v1/ocr/results/${result.id}/cancel`, {
+      await apiFetch<OCRResult>(`ocr/results/${result.id}/cancel`, {
         method: "POST"
       });
       onSaved("OCR result cancelled.");
@@ -161,7 +161,7 @@ function ReviewCard({
     setSaving(true);
     onError(null);
     try {
-      await apiFetch<OCRResult>(`/api/v1/ocr/results/${result.id}/retry`, {
+      await apiFetch<OCRResult>(`ocr/results/${result.id}/retry`, {
         method: "POST"
       });
       onSaved("OCR result queued for retry.");

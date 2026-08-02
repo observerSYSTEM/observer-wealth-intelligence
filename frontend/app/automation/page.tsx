@@ -35,12 +35,12 @@ export default function AutomationPage() {
 
   async function loadAutomation() {
     const [jobData, backupData] = await Promise.all([
-      apiFetch<AutomationJobList>("/api/v1/automation/jobs"),
-      apiFetch<BackupRunList>("/api/v1/backups/history")
+      apiFetch<AutomationJobList>("automation/jobs"),
+      apiFetch<BackupRunList>("backups/history")
     ]);
     setJobs(jobData.items);
     setBackups(backupData.items);
-    const status = await apiFetch<BackupStatus>("/api/v1/backups/status");
+    const status = await apiFetch<BackupStatus>("backups/status");
     if (status.settings) {
       setSchedule({
         enabled: status.settings.enabled,
@@ -55,13 +55,13 @@ export default function AutomationPage() {
     async function load() {
       try {
         const [jobData, backupData] = await Promise.all([
-          apiFetch<AutomationJobList>("/api/v1/automation/jobs"),
-          apiFetch<BackupRunList>("/api/v1/backups/history")
+          apiFetch<AutomationJobList>("automation/jobs"),
+          apiFetch<BackupRunList>("backups/history")
         ]);
         if (active) {
           setJobs(jobData.items);
           setBackups(backupData.items);
-          const status = await apiFetch<BackupStatus>("/api/v1/backups/status");
+          const status = await apiFetch<BackupStatus>("backups/status");
           if (active && status.settings) {
             setSchedule({
               enabled: status.settings.enabled,
@@ -86,7 +86,7 @@ export default function AutomationPage() {
     setError(null);
     setMessage(null);
     try {
-      await apiFetch("/api/v1/backups/settings", {
+      await apiFetch("backups/settings", {
         method: "PATCH",
         body: JSON.stringify(schedule)
       });
@@ -104,7 +104,7 @@ export default function AutomationPage() {
     setError(null);
     setMessage(null);
     try {
-      await apiFetch<BackupRun>("/api/v1/backups/run", {
+      await apiFetch<BackupRun>("backups/run", {
         method: "POST",
         body: JSON.stringify({ trigger: "manual" })
       });
@@ -120,7 +120,7 @@ export default function AutomationPage() {
   async function verifyBackup(backupId: string) {
     setError(null);
     try {
-      await apiFetch<BackupRun>("/api/v1/backups/verify", {
+      await apiFetch<BackupRun>("backups/verify", {
         method: "POST",
         body: JSON.stringify({ backup_id: backupId, latest: false })
       });

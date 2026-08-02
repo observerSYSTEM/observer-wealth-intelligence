@@ -60,7 +60,7 @@ export default function GoalsPage() {
   const [saving, setSaving] = useState(false);
 
   async function loadGoals() {
-    const data = await apiFetch<GoalList>("/api/v1/goals?limit=100");
+    const data = await apiFetch<GoalList>("goals?limit=100");
     setGoals(data.items);
   }
 
@@ -68,7 +68,7 @@ export default function GoalsPage() {
     let active = true;
     async function load() {
       try {
-        const data = await apiFetch<GoalList>("/api/v1/goals?limit=100");
+        const data = await apiFetch<GoalList>("goals?limit=100");
         if (active) setGoals(data.items);
       } catch (loadError) {
         if (active) setError(errorMessage(loadError));
@@ -90,7 +90,7 @@ export default function GoalsPage() {
     setError(null);
     setMessage(null);
     try {
-      await apiFetch<Goal>("/api/v1/goals", {
+      await apiFetch<Goal>("goals", {
         method: "POST",
         body: JSON.stringify({
           ...form,
@@ -129,7 +129,7 @@ export default function GoalsPage() {
     setError(null);
     setMessage(null);
     try {
-      await apiFetch<GoalContribution>(`/api/v1/goals/${goal.id}/contributions`, {
+      await apiFetch<GoalContribution>(`goals/${goal.id}/contributions`, {
         method: "POST",
         body: JSON.stringify({ amount, currency: goal.currency })
       });
@@ -145,7 +145,7 @@ export default function GoalsPage() {
     if (!archiveId) return;
     setError(null);
     try {
-      await apiFetch(`/api/v1/goals/${archiveId}`, { method: "DELETE" });
+      await apiFetch(`goals/${archiveId}`, { method: "DELETE" });
       setGoals((current) => current.filter((goal) => goal.id !== archiveId));
       setArchiveId(null);
     } catch (archiveError) {

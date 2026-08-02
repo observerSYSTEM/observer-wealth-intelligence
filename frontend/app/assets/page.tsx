@@ -44,7 +44,7 @@ export default function AssetsPage() {
       if (statusFilter) params.set("status", statusFilter);
       if (search) params.set("search", search);
       try {
-        const data = await apiFetch<AssetList>(`/api/v1/assets?${params.toString()}`);
+        const data = await apiFetch<AssetList>(`assets?${params.toString()}`);
         if (active) {
           setAssets(data.items);
           setTotal(data.total);
@@ -64,7 +64,7 @@ export default function AssetsPage() {
     if (!archiveId) return;
     setError(null);
     try {
-      await apiFetch(`/api/v1/assets/${archiveId}`, { method: "DELETE" });
+      await apiFetch(`assets/${archiveId}`, { method: "DELETE" });
       setAssets((current) => current.filter((asset) => asset.id !== archiveId));
       setTotal((current) => Math.max(0, current - 1));
       setArchiveId(null);

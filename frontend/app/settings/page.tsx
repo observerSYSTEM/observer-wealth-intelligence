@@ -18,7 +18,7 @@ export default function SettingsPage() {
     let active = true;
     async function loadSettings() {
       try {
-        const data = await apiFetch<AppSettings>("/api/v1/settings");
+        const data = await apiFetch<AppSettings>("settings");
         if (active) setSettings(data);
       } catch (loadError) {
         if (active) setError(errorMessage(loadError));
@@ -86,7 +86,7 @@ function SettingsForm({ initialSettings }: { initialSettings: AppSettings }) {
     }
     setSaving(true);
     try {
-      const updated = await apiFetch<AppSettings>("/api/v1/settings", {
+      const updated = await apiFetch<AppSettings>("settings", {
         method: "PATCH",
         body: JSON.stringify({
           registration_enabled: registrationEnabled,

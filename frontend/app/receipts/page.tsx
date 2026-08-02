@@ -34,7 +34,7 @@ export default function ReceiptsPage() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   async function loadReceipts() {
-    const data = await apiFetch<ReceiptList>("/api/v1/receipts");
+    const data = await apiFetch<ReceiptList>("receipts");
     setReceipts(data.items);
   }
 
@@ -42,7 +42,7 @@ export default function ReceiptsPage() {
     let active = true;
     async function load() {
       try {
-        const data = await apiFetch<ReceiptList>("/api/v1/receipts");
+        const data = await apiFetch<ReceiptList>("receipts");
         if (active) setReceipts(data.items);
       } catch (loadError) {
         if (active) setError(errorMessage(loadError));
@@ -68,7 +68,7 @@ export default function ReceiptsPage() {
     try {
       const form = new FormData();
       form.append("receipt", file);
-      await apiFetch<Receipt>("/api/v1/receipts", { method: "POST", body: form });
+      await apiFetch<Receipt>("receipts", { method: "POST", body: form });
       setFile(null);
       setMessage("Receipt uploaded.");
       await loadReceipts();
@@ -82,7 +82,7 @@ export default function ReceiptsPage() {
   async function previewReceipt(receipt: Receipt) {
     setError(null);
     try {
-      const blob = await apiBlob(`/api/v1/receipts/${receipt.id}/content`);
+      const blob = await apiBlob(`receipts/${receipt.id}/content`);
       if (previewUrl) URL.revokeObjectURL(previewUrl);
       setPreviewUrl(URL.createObjectURL(blob));
       setPreviewType(receipt.media_type);
@@ -95,7 +95,7 @@ export default function ReceiptsPage() {
     if (!deleteId) return;
     setError(null);
     try {
-      await apiFetch(`/api/v1/receipts/${deleteId}`, { method: "DELETE" });
+      await apiFetch(`receipts/${deleteId}`, { method: "DELETE" });
       setReceipts((current) => current.filter((receipt) => receipt.id !== deleteId));
       setDeleteId(null);
     } catch (deleteError) {
@@ -108,7 +108,7 @@ export default function ReceiptsPage() {
     setError(null);
     setMessage(null);
     try {
-      await apiFetch<OCRResult>("/api/v1/ocr/jobs", {
+      await apiFetch<OCRResult>("ocr/jobs", {
         method: "POST",
         body: JSON.stringify({ source_type: "receipt", source_id: receipt.id })
       });
@@ -220,7 +220,7 @@ export default function ReceiptsPage() {
                       </button>
                       <a
                         title="Download"
-                        href={apiUrl(`/api/v1/receipts/${receipt.id}/content`)}
+                        href={apiUrl(`receipts/${receipt.id}/content`)}
                         className={buttonSecondaryClass}
                       >
                         <Download className="h-4 w-4" aria-hidden="true" />

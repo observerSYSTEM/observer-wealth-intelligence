@@ -31,7 +31,7 @@ export default function EntriesPage() {
       if (currency) params.set("currency", currency);
       if (incomeSource) params.set("income_source", incomeSource);
       try {
-        const data = await apiFetch<EntryList>(`/api/v1/entries?${params.toString()}`);
+        const data = await apiFetch<EntryList>(`entries?${params.toString()}`);
         if (active) {
           setEntries(data.items);
           setTotal(data.total);
@@ -49,7 +49,7 @@ export default function EntriesPage() {
 
   async function deleteEntry(entryId: string) {
     if (!window.confirm("Delete this entry?")) return;
-    await apiFetch(`/api/v1/entries/${entryId}`, { method: "DELETE" });
+    await apiFetch(`entries/${entryId}`, { method: "DELETE" });
     setEntries((current) => current.filter((entry) => entry.id !== entryId));
     setTotal((current) => Math.max(0, current - 1));
   }
