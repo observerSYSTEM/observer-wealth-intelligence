@@ -2,7 +2,8 @@
 
 import { CheckCircle2, FileText, PiggyBank, ReceiptText, Save, Sparkles } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import { AppFrame } from "@/components/app-frame";
 import { Field, FormMessage, inputClass } from "@/components/form-shell";
@@ -19,6 +20,7 @@ import {
 } from "@/components/wealth-ui";
 import { apiFetch, errorMessage } from "@/lib/api";
 import { formatMoney } from "@/lib/format";
+import { uploadReceiptFile } from "@/lib/uploads";
 import type { AppSettings } from "@/types/auth";
 import type { WealthEntry } from "@/types/finance";
 
@@ -32,7 +34,23 @@ function roundMoney(value: number) {
   return Math.round(value * 100) / 100;
 }
 
+function createIdempotencyKey() {
+  const cryptoApi = globalThis.crypto;
+  if (cryptoApi?.randomUUID) return cryptoApi.randomUUID();
+
+  if (cryptoApi?.getRandomValues) {
+    const bytes = cryptoApi.getRandomValues(new Uint8Array(16));
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0"));
+    return `${hex.slice(0, 4).join("")}-${hex.slice(4, 6).join("")}-${hex.slice(6, 8).join("")}-${hex.slice(8, 10).join("")}-${hex.slice(10).join("")}`;
+  }
+
+  return `entry-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
+}
+
 export default function NewEntryPage() {
+  const router = useRouter();
   const [settings, setSettings] = useState<AppSettings | null>(null);
   const [step, setStep] = useState<Step>("details");
   const [entryDate, setEntryDate] = useState(todayIso());
@@ -51,7 +69,7 @@ export default function NewEntryPage() {
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [savedEntry, setSavedEntry] = useState<WealthEntry | null>(null);
-  const [idempotencyKey] = useState(() => crypto.randomUUID());
+  const idempotencyKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -86,14 +104,10 @@ export default function NewEntryPage() {
     setSaving(true);
     setError(null);
     try {
+      idempotencyKeyRef.current ??= createIdempotencyKey();
       let receiptId = uploadedReceiptId;
       if (receiptFile && !receiptId) {
-        const form = new FormData();
-        form.append("receipt", receiptFile);
-        const receipt = await apiFetch<{ id: string }>("receipts", {
-          method: "POST",
-          body: form
-        });
+        const receipt = await uploadReceiptFile<{ id: string }>(receiptFile);
         receiptId = receipt.id;
         setUploadedReceiptId(receipt.id);
       }
@@ -113,11 +127,12 @@ export default function NewEntryPage() {
           receipt_id: receiptId,
           duplicate_confirmed: duplicateConfirmed,
           future_confirmed: isFutureEntry ? futureConfirmed : false,
-          idempotency_key: idempotencyKey
+          idempotency_key: idempotencyKeyRef.current
         })
       });
       setSavedEntry(entry);
       setStep("success");
+      router.replace(`/entries/${entry.id}`);
     } catch (saveError) {
       const message = errorMessage(saveError);
       setError(message);

@@ -20,6 +20,7 @@ import {
 } from "@/components/wealth-ui";
 import { apiBlob, apiFetch, apiUrl, contextualErrorMessage, errorMessage } from "@/lib/api";
 import { formatFileSize } from "@/lib/format";
+import { uploadReceiptFile } from "@/lib/uploads";
 import type { OCRResult, Receipt, ReceiptList } from "@/types/finance";
 
 export default function ReceiptsPage() {
@@ -66,9 +67,7 @@ export default function ReceiptsPage() {
     setError(null);
     setMessage(null);
     try {
-      const form = new FormData();
-      form.append("receipt", file);
-      await apiFetch<Receipt>("receipts", { method: "POST", body: form });
+      await uploadReceiptFile<Receipt>(file);
       setFile(null);
       setMessage("Receipt uploaded.");
       await loadReceipts();
