@@ -84,13 +84,20 @@ export default function NewEntryPage() {
   const saveInFlightRef = useRef(false);
 
   useEffect(() => {
+    traceDailyEntry("component hydrated", { initialStep: "details" });
+  }, []);
+
+  useEffect(() => {
     let active = true;
     async function loadSettings() {
       try {
         const data = await apiFetch<AppSettings>("settings");
+        traceDailyEntry("settings loaded");
         if (active) setSettings(data);
       } catch (loadError) {
-        if (active) setError(errorMessage(loadError));
+        const message = errorMessage(loadError);
+        traceDailyEntry("settings load failed", { message });
+        if (active) setError(message);
       }
     }
     void loadSettings();
@@ -125,11 +132,19 @@ export default function NewEntryPage() {
       idempotencyKeyRef.current ??= createIdempotencyKey();
       let receiptId = uploadedReceiptId;
       if (receiptFile && !receiptId) {
+        traceDailyEntry("receipt upload starting", { source, filename: receiptFile.name });
         const receipt = await uploadReceiptFile<{ id: string }>(receiptFile);
+        traceDailyEntry("receipt upload completed", { source, receiptId: receipt.id });
         receiptId = receipt.id;
         setUploadedReceiptId(receipt.id);
       }
 
+      traceDailyEntry("entries POST starting", {
+        source,
+        entryDate,
+        incomeSource,
+        hasReceipt: receiptId !== null
+      });
       const entry = await apiFetch<WealthEntry>("entries", {
         method: "POST",
         body: JSON.stringify({
@@ -154,6 +169,7 @@ export default function NewEntryPage() {
       router.replace(`/entries/${entry.id}`);
     } catch (saveError) {
       const message = errorMessage(saveError);
+      traceDailyEntry("save failed", { source, message });
       setError(message);
       if (message.toLowerCase().includes("already exists")) {
         setDuplicateConfirmed(true);
@@ -179,6 +195,21 @@ export default function NewEntryPage() {
       step
     });
     void saveEntry("button-click");
+  }
+
+  function handleContinueClick() {
+    traceDailyEntry("continue button click received", { step, canReview });
+    setStep("allocation");
+  }
+
+  function handleReviewClick() {
+    traceDailyEntry("review button click received", { step });
+    setStep("review");
+  }
+
+  function handleBackClick(nextStep: Step) {
+    traceDailyEntry("back button click received", { step, nextStep });
+    setStep(nextStep);
   }
 
   return (
@@ -274,7 +305,7 @@ export default function NewEntryPage() {
                       <button
                         type="button"
                         disabled={!canReview}
-                        onClick={() => setStep("allocation")}
+                        onClick={handleContinueClick}
                         className={buttonPrimaryClass}
                       >
                         Continue
@@ -327,10 +358,10 @@ export default function NewEntryPage() {
                       Transfer confirmed
                     </label>
                     <div className="mt-5 flex flex-wrap justify-between gap-2">
-                      <button type="button" onClick={() => setStep("details")} className={buttonSecondaryClass}>
+                      <button type="button" onClick={() => handleBackClick("details")} className={buttonSecondaryClass}>
                         Back
                       </button>
-                      <button type="button" onClick={() => setStep("review")} className={buttonPrimaryClass}>
+                      <button type="button" onClick={handleReviewClick} className={buttonPrimaryClass}>
                         Review
                       </button>
                     </div>
@@ -356,7 +387,7 @@ export default function NewEntryPage() {
                       />
                     </Field>
                     <div className="mt-5 flex flex-wrap justify-between gap-2">
-                      <button type="button" onClick={() => setStep("allocation")} className={buttonSecondaryClass}>
+                      <button type="button" onClick={() => handleBackClick("allocation")} className={buttonSecondaryClass}>
                         Back
                       </button>
                       <button
