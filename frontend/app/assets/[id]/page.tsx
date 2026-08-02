@@ -8,7 +8,7 @@ import type { FormEvent } from "react";
 import { AppFrame } from "@/components/app-frame";
 import { Field, FormMessage, inputClass } from "@/components/form-shell";
 import { ProtectedRoute } from "@/components/protected-route";
-import { apiBaseUrl, apiFetch, errorMessage } from "@/lib/api";
+import { apiFetch, apiUrl, errorMessage } from "@/lib/api";
 import { formatFileSize, formatMoney, statusLabel } from "@/lib/format";
 import type { Asset, AssetHistory, AssetHistoryList, VaultDocument, VaultDocumentList } from "@/types/finance";
 
@@ -189,7 +189,7 @@ export default function AssetDetailPage() {
                   </button>
                   <div className="mt-4 space-y-2">
                     {documents.map((document) => (
-                      <a key={document.id} href={`${apiBaseUrl}/api/v1/vault/documents/${document.id}/content`} className="flex items-center justify-between gap-3 rounded-md border border-black/10 p-3 text-sm hover:bg-mist dark:border-white/10 dark:hover:bg-white/10">
+                      <a key={document.id} href={apiUrl(`/api/v1/vault/documents/${document.id}/content`)} className="flex items-center justify-between gap-3 rounded-md border border-black/10 p-3 text-sm hover:bg-mist dark:border-white/10 dark:hover:bg-white/10">
                         <span className="truncate">{document.original_filename}</span>
                         <span className="flex items-center gap-2 text-black/60 dark:text-white/60">
                           {formatFileSize(document.file_size)}

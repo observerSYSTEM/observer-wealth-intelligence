@@ -20,7 +20,7 @@ import {
   SearchInput,
   StatusBadge
 } from "@/components/wealth-ui";
-import { apiBaseUrl, apiBlob, apiFetch, errorMessage } from "@/lib/api";
+import { apiBlob, apiFetch, apiUrl, errorMessage } from "@/lib/api";
 import { formatFileSize, statusLabel } from "@/lib/format";
 import type { OCRResult, VaultDocument, VaultDocumentList } from "@/types/finance";
 
@@ -227,7 +227,7 @@ export default function VaultFolderPage() {
                       <button type="button" title="Preview" onClick={() => void previewDocument(document)} className={buttonSecondaryClass}>
                         <Eye className="h-4 w-4" aria-hidden="true" />
                       </button>
-                      <a title="Download" href={`${apiBaseUrl}/api/v1/vault/documents/${document.id}/content`} className={buttonSecondaryClass}>
+                      <a title="Download" href={apiUrl(`/api/v1/vault/documents/${document.id}/content`)} className={buttonSecondaryClass}>
                         <Download className="h-4 w-4" aria-hidden="true" />
                       </a>
                       <button type="button" title="Run OCR" disabled={busy} onClick={() => void runOcr(document)} className={buttonSecondaryClass}>

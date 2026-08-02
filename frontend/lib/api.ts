@@ -1,5 +1,6 @@
 const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL;
 const defaultApiUrl = process.env.NODE_ENV === "production" ? "" : "http://localhost:8000";
+const apiVersionPath = "/api/v1";
 
 function trimTrailingSlashes(value: string) {
   let end = value.length;
@@ -13,7 +14,7 @@ function startsWithApiSegment(pathname: string) {
   return pathname.split("/").filter(Boolean)[0] === "api";
 }
 
-function normalizeApiBaseUrl(value: string | undefined) {
+function normalizeApiBaseOrigin(value: string | undefined) {
   const configured = value?.trim();
   const candidate = configured || defaultApiUrl;
   if (!candidate) return "";
@@ -33,7 +34,29 @@ function normalizeApiBaseUrl(value: string | undefined) {
   }
 }
 
-export const apiBaseUrl = normalizeApiBaseUrl(configuredApiUrl);
+function canonicalApiPath(path: string) {
+  const [pathWithoutHash, hash = ""] = path.split("#", 2);
+  const [pathname, query = ""] = pathWithoutHash.split("?", 2);
+  const segments = pathname.split("/").filter(Boolean);
+
+  while (segments[0] === "api") {
+    segments.shift();
+  }
+  if (segments[0] === "v1") {
+    segments.shift();
+  }
+
+  const suffix = segments.length ? `/${segments.join("/")}` : "";
+  const querySuffix = query ? `?${query}` : "";
+  const hashSuffix = hash ? `#${hash}` : "";
+  return `${apiVersionPath}${suffix}${querySuffix}${hashSuffix}`;
+}
+
+const apiBaseOrigin = normalizeApiBaseOrigin(configuredApiUrl);
+
+export function apiUrl(path: string) {
+  return `${apiBaseOrigin}${canonicalApiPath(path)}`;
+}
 
 type ApiFetchOptions = {
   retryOnUnauthorized?: boolean;
@@ -178,7 +201,7 @@ export async function apiFetch<T>(
 
   let response: Response;
   try {
-    response = await fetch(`${apiBaseUrl}${path}`, {
+    response = await fetch(apiUrl(path), {
       ...init,
       method,
       headers,
@@ -216,7 +239,7 @@ export async function apiFetch<T>(
 }
 
 export async function apiBlob(path: string): Promise<Blob> {
-  const response = await fetch(`${apiBaseUrl}${path}`, {
+  const response = await fetch(apiUrl(path), {
     credentials: "include"
   });
   if (!response.ok) {

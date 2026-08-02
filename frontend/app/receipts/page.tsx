@@ -18,7 +18,7 @@ import {
   Panel,
   StatusBadge
 } from "@/components/wealth-ui";
-import { apiBaseUrl, apiBlob, apiFetch, errorMessage } from "@/lib/api";
+import { apiBlob, apiFetch, apiUrl, errorMessage } from "@/lib/api";
 import { formatFileSize } from "@/lib/format";
 import type { OCRResult, Receipt, ReceiptList } from "@/types/finance";
 
@@ -220,7 +220,7 @@ export default function ReceiptsPage() {
                       </button>
                       <a
                         title="Download"
-                        href={`${apiBaseUrl}/api/v1/receipts/${receipt.id}/content`}
+                        href={apiUrl(`/api/v1/receipts/${receipt.id}/content`)}
                         className={buttonSecondaryClass}
                       >
                         <Download className="h-4 w-4" aria-hidden="true" />
