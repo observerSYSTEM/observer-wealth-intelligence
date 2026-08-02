@@ -1,7 +1,39 @@
 const configuredApiUrl = process.env.NEXT_PUBLIC_API_URL;
 const defaultApiUrl = process.env.NODE_ENV === "production" ? "" : "http://localhost:8000";
 
-export const apiBaseUrl = (configuredApiUrl ?? defaultApiUrl).replace(/\/$/, "");
+function trimTrailingSlashes(value: string) {
+  let end = value.length;
+  while (end > 1 && value[end - 1] === "/") {
+    end -= 1;
+  }
+  return value.slice(0, end);
+}
+
+function startsWithApiSegment(pathname: string) {
+  return pathname.split("/").filter(Boolean)[0] === "api";
+}
+
+function normalizeApiBaseUrl(value: string | undefined) {
+  const configured = value?.trim();
+  const candidate = configured || defaultApiUrl;
+  if (!candidate) return "";
+
+  if (startsWithApiSegment(candidate)) {
+    return "";
+  }
+
+  try {
+    const url = new URL(candidate);
+    if (url.pathname === "/" || startsWithApiSegment(url.pathname)) {
+      return url.origin;
+    }
+    return trimTrailingSlashes(`${url.origin}${url.pathname}`);
+  } catch {
+    return trimTrailingSlashes(candidate);
+  }
+}
+
+export const apiBaseUrl = normalizeApiBaseUrl(configuredApiUrl);
 
 type ApiFetchOptions = {
   retryOnUnauthorized?: boolean;
