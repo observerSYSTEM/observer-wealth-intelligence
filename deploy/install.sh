@@ -16,8 +16,12 @@ fi
 
 if [ ! -f .env ]; then
   cp .env.example .env
-  echo "Created .env from .env.example. Edit SECRET_KEY before production use."
+  echo "Created .env from .env.example."
 fi
+
+. ./deploy/env-secrets.sh
+ensure_env_secret_values .env
+echo "Ensured local .env secret values are present. Do not commit .env."
 
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build -d
 docker compose ps

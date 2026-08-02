@@ -201,6 +201,8 @@ check_internet() {
 check_compose_files() {
   if command -v docker >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
     if SECRET_KEY=preflight-secret-preflight-secret-preflight \
+      POSTGRES_PASSWORD=preflight-postgres-password \
+      DATABASE_URL=postgresql+psycopg://observer:preflight-postgres-password@db:5432/observer_wealth \
       docker compose -f docker-compose.yml -f docker-compose.pi.yml config >/dev/null; then
       pass "Raspberry Pi Compose configuration is valid"
     else

@@ -5,7 +5,7 @@ services:
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-observer_wealth}
       POSTGRES_USER: ${POSTGRES_USER:-observer}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-observer-local-password}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env before starting Compose}
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./database/postgresql.conf:/etc/postgresql/postgresql.conf:ro
@@ -25,9 +25,9 @@ services:
       APP_NAME: ${APP_NAME:-Observer Wealth Intelligence}
       APP_VERSION: ${APP_VERSION:-1.0.0-rc.1}
       ENVIRONMENT: ${ENVIRONMENT:-development}
-      SECRET_KEY: ${SECRET_KEY:-development-secret-change-before-production}
+      SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env before starting Compose}
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-60}
-      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://observer:observer-local-password@db:5432/observer_wealth}
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in .env before starting Compose}
       CORS_ORIGINS: ${CORS_ORIGINS:-["http://localhost:3000","http://localhost:8080"]}
       RECEIPT_MAX_FILE_SIZE_BYTES: ${RECEIPT_MAX_FILE_SIZE_BYTES:-10485760}
       RECEIPT_STORAGE_PATH: ${RECEIPT_STORAGE_PATH:-data/receipts}
@@ -64,8 +64,8 @@ services:
       APP_NAME: ${APP_NAME:-Observer Wealth Intelligence}
       APP_VERSION: ${APP_VERSION:-1.0.0-rc.1}
       ENVIRONMENT: ${ENVIRONMENT:-development}
-      SECRET_KEY: ${SECRET_KEY:-development-secret-change-before-production}
-      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://observer:observer-local-password@db:5432/observer_wealth}
+      SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env before starting Compose}
+      DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in .env before starting Compose}
       RECEIPT_STORAGE_PATH: ${RECEIPT_STORAGE_PATH:-data/receipts}
       ASSET_STORAGE_PATH: ${ASSET_STORAGE_PATH:-data/assets}
       VAULT_STORAGE_PATH: ${VAULT_STORAGE_PATH:-data/vault}

@@ -71,6 +71,7 @@ Backups include the database dump, receipt files, asset files, vault files, OCR 
 
 ```bash
 cp .env.example .env
+# set SECRET_KEY, POSTGRES_PASSWORD, and DATABASE_URL, or use deploy/install.sh to generate them
 docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
 ```
 
@@ -82,13 +83,13 @@ Fresh installations redirect to `/setup`. The first registered account becomes t
 
 ```bash
 cp .env.example .env
-# edit .env and set a strong SECRET_KEY
+# set SECRET_KEY, POSTGRES_PASSWORD, DATABASE_URL, and production cookie settings
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up --build -d
 ```
 
 The production reverse proxy serves the app on `http://localhost:8080`.
 
-Production deployments must use a strong `SECRET_KEY` and secure cookies. Set `COOKIE_SECURE=true` when serving over HTTPS.
+`.env.example` intentionally leaves secret-bearing values blank. Compose requires local `.env` values for `SECRET_KEY`, `POSTGRES_PASSWORD`, and `DATABASE_URL`. Production deployments must use secure cookies. Set `COOKIE_SECURE=true` when serving over HTTPS.
 
 ## Raspberry Pi RC1
 

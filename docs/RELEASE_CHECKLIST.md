@@ -8,7 +8,9 @@ Required tag after successful validation only: `v1.0.0-rc.1`
 
 - Confirm HEAD is based on approved commit `dac3a11`.
 - Confirm working tree is clean.
+- Confirm `.env` is ignored.
 - Confirm no secrets are staged.
+- Run a tracked-file secret scan before tagging.
 - If a private GitHub remote is needed, use:
 
 ```bash
@@ -34,8 +36,11 @@ npm run build
 npm audit --omit=dev
 
 cd ..
+export SECRET_KEY="rc1-validation-secret-rc1-validation-secret"
+export POSTGRES_PASSWORD="rc1-validation-postgres-password"
+export DATABASE_URL="postgresql+psycopg://observer:rc1-validation-postgres-password@db:5432/observer_wealth"
 docker compose -f docker-compose.yml config
-SECRET_KEY=rc1-validation-secret-rc1-validation-secret docker compose -f docker-compose.yml -f docker-compose.pi.yml config
+docker compose -f docker-compose.yml -f docker-compose.pi.yml config
 ```
 
 ## Raspberry Pi Gates

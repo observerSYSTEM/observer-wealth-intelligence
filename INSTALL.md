@@ -14,7 +14,17 @@
 cp .env.example .env
 ```
 
-Set `SECRET_KEY` to a strong random value before any shared or production deployment.
+`SECRET_KEY`, `POSTGRES_PASSWORD`, and `DATABASE_URL` are intentionally blank in `.env.example`.
+The install scripts generate local values when they create `.env`. For manual setup, set those
+values before running Compose and keep `.env` out of source control.
+
+Example manual generation:
+
+```bash
+SECRET_KEY="$(openssl rand -hex 32)"
+POSTGRES_PASSWORD="$(openssl rand -hex 32)"
+DATABASE_URL="postgresql+psycopg://observer:${POSTGRES_PASSWORD}@db:5432/observer_wealth"
+```
 
 Uploaded files and OCR artifacts are stored outside PostgreSQL. The default layout is:
 

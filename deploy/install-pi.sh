@@ -15,8 +15,12 @@ fi
 
 if [ ! -f .env ]; then
   cp .env.example .env
-  echo "Created .env. Set SECRET_KEY before exposing this service beyond localhost."
+  echo "Created .env."
 fi
+
+. ./deploy/env-secrets.sh
+ensure_env_secret_values .env
+echo "Ensured local .env secret values are present. Do not commit .env."
 
 mkdir -p data/backups data/assets data/vault data/receipts data/ocr
 sudo chown -R 10001:"$(id -g)" data

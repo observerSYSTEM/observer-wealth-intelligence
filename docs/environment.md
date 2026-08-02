@@ -5,7 +5,7 @@
 | `APP_NAME` | No | API title shown in OpenAPI metadata. |
 | `APP_VERSION` | No | Release version returned by the health endpoint. Default is `1.0.0-rc.1`. |
 | `ENVIRONMENT` | No | `development`, `test`, or `production`. |
-| `SECRET_KEY` | Yes in production | JWT signing secret. |
+| `SECRET_KEY` | Yes | JWT signing secret. Required by Compose and intentionally blank in `.env.example`. |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | No | JWT access token lifetime. |
 | `REFRESH_TOKEN_EXPIRE_DAYS` | No | Refresh-session lifetime. |
 | `LOGIN_RATE_LIMIT_ATTEMPTS` | No | Failed login attempts allowed per window. |
@@ -25,10 +25,10 @@
 | `BACKUP_SCHEDULE_TIME` | No | Initial backup schedule time in `HH:MM`. |
 | `COOKIE_SECURE` | Production HTTPS | Forces auth cookies to use the Secure flag. |
 | `COOKIE_SAMESITE` | No | Auth cookie SameSite policy. |
-| `DATABASE_URL` | Yes | SQLAlchemy PostgreSQL connection string. |
+| `DATABASE_URL` | Yes | SQLAlchemy PostgreSQL connection string. Must use the same password as `POSTGRES_PASSWORD` for Compose deployments. |
 | `POSTGRES_DB` | No | PostgreSQL database name used by Docker Compose. |
 | `POSTGRES_USER` | No | PostgreSQL user used by Docker Compose. |
-| `POSTGRES_PASSWORD` | No | PostgreSQL password used by Docker Compose. |
+| `POSTGRES_PASSWORD` | Yes for Compose | PostgreSQL password used by Docker Compose. Required and intentionally blank in `.env.example`. |
 | `CORS_ORIGINS` | No | JSON array of allowed browser origins. |
 | `NEXT_PUBLIC_API_URL` | No | Browser-visible API base URL. Empty value uses same origin. |
 | `BACKUP_DIR` | No | Directory used by backup script. |
@@ -36,3 +36,5 @@
 | `INCLUDE_SECRETS_IN_BACKUP` | No | Includes `.env` in backup archives only when set to `true`. Use encrypted storage. |
 
 Uploaded files, OCR artifacts, and backup archives should be stored on persistent disk. PostgreSQL backups do not include file bytes; the backup script copies `RECEIPT_STORAGE_PATH`, `ASSET_STORAGE_PATH`, `VAULT_STORAGE_PATH`, and `OCR_STORAGE_PATH` separately.
+
+`.env` is ignored by git and must remain local to the deployment host. The install scripts generate `SECRET_KEY`, `POSTGRES_PASSWORD`, and `DATABASE_URL` when creating a new `.env`; manual installs must provide equivalent strong values before running Compose.
