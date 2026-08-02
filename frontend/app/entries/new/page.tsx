@@ -4,6 +4,7 @@ import { CheckCircle2, FileText, PiggyBank, ReceiptText, Save, Sparkles } from "
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
+import type { FormEvent, MouseEvent } from "react";
 
 import { AppFrame } from "@/components/app-frame";
 import { Field, FormMessage, inputClass } from "@/components/form-shell";
@@ -49,6 +50,16 @@ function createIdempotencyKey() {
   return `entry-${Date.now()}-${Math.random().toString(36).slice(2, 12)}`;
 }
 
+function traceDailyEntry(message: string, details?: Record<string, unknown>) {
+  if (typeof window === "undefined") return;
+  const enabled =
+    process.env.NODE_ENV === "development" ||
+    window.localStorage.getItem("owi:debug-events") === "true";
+  if (enabled) {
+    console.info(`[OWI Daily Entry] ${message}`, details ?? {});
+  }
+}
+
 export default function NewEntryPage() {
   const router = useRouter();
   const [settings, setSettings] = useState<AppSettings | null>(null);
@@ -70,6 +81,7 @@ export default function NewEntryPage() {
   const [saving, setSaving] = useState(false);
   const [savedEntry, setSavedEntry] = useState<WealthEntry | null>(null);
   const idempotencyKeyRef = useRef<string | null>(null);
+  const saveInFlightRef = useRef(false);
 
   useEffect(() => {
     let active = true;
@@ -100,9 +112,15 @@ export default function NewEntryPage() {
   const isFutureEntry = entryDate > todayIso();
   const canReview = !isFutureEntry || futureConfirmed;
 
-  async function saveEntry() {
+  async function saveEntry(source: "button-click" | "form-submit") {
+    if (saveInFlightRef.current) {
+      traceDailyEntry("save ignored because a save is already in flight", { source });
+      return;
+    }
+    saveInFlightRef.current = true;
     setSaving(true);
     setError(null);
+    traceDailyEntry("save handler started", { source, step });
     try {
       idempotencyKeyRef.current ??= createIdempotencyKey();
       let receiptId = uploadedReceiptId;
@@ -130,6 +148,7 @@ export default function NewEntryPage() {
           idempotency_key: idempotencyKeyRef.current
         })
       });
+      traceDailyEntry("entries POST completed", { source, entryId: entry.id });
       setSavedEntry(entry);
       setStep("success");
       router.replace(`/entries/${entry.id}`);
@@ -141,8 +160,25 @@ export default function NewEntryPage() {
       }
       setStep("review");
     } finally {
+      saveInFlightRef.current = false;
       setSaving(false);
     }
+  }
+
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    traceDailyEntry("form submit event received", { step });
+    void saveEntry("form-submit");
+  }
+
+  function handleSaveClick(event: MouseEvent<HTMLButtonElement>) {
+    event.preventDefault();
+    traceDailyEntry("save button click received", {
+      disabled: event.currentTarget.disabled,
+      formAttached: event.currentTarget.form !== null,
+      step
+    });
+    void saveEntry("button-click");
   }
 
   return (
@@ -164,7 +200,11 @@ export default function NewEntryPage() {
           {step === "success" && savedEntry ? (
             <SuccessState entry={savedEntry} />
           ) : (
-            <div className="grid gap-5 xl:grid-cols-[1fr_0.82fr]">
+            <form
+              className="grid gap-5 xl:grid-cols-[1fr_0.82fr]"
+              onSubmit={handleSubmit}
+              noValidate
+            >
               <div className="space-y-5">
                 {step === "details" ? (
                   <Panel title="Entry Details" icon={<FileText className="h-5 w-5" aria-hidden="true" />}>
@@ -322,7 +362,7 @@ export default function NewEntryPage() {
                       <button
                         type="button"
                         disabled={saving}
-                        onClick={() => void saveEntry()}
+                        onClick={handleSaveClick}
                         className={buttonPrimaryClass}
                       >
                         {saving ? "Saving" : "Save entry"}
@@ -370,7 +410,7 @@ export default function NewEntryPage() {
                   </div>
                 </Panel>
               </aside>
-            </div>
+            </form>
           )}
         </section>
       </AppFrame>

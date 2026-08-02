@@ -562,7 +562,7 @@ export function QuickAddMenu({ pendingOcrCount }: { pendingOcrCount: number }) {
 export function BottomNavigation({ pathname, onMore }: { pathname: string; onMore: () => void }) {
   const items = [
     { href: "/dashboard", label: "Home", icon: <Home className="h-5 w-5" /> },
-    { href: "/entries/new", label: "Save", icon: <Save className="h-5 w-5" /> },
+    { href: "/entries/new", label: "Entry", icon: <Save className="h-5 w-5" /> },
     { href: "/portfolio", label: "Portfolio", icon: <ChartPie className="h-5 w-5" /> },
     { href: "/goals", label: "Goals", icon: <Target className="h-5 w-5" /> }
   ];

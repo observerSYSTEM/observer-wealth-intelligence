@@ -12,6 +12,8 @@ node_modules/
 out/
 dist/
 coverage/
+playwright-report/
+test-results/
 *.tsbuildinfo
 
 # Environment
