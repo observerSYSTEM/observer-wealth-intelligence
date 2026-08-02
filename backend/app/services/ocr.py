@@ -1,7 +1,8 @@
 import json
+import logging
 import re
 import tempfile
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from importlib import import_module, metadata
 from pathlib import Path
@@ -30,7 +31,10 @@ from app.services.notifications import notify_user
 from app.services.receipts import receipt_file_path
 from app.services.vault import document_file_path
 
+logger = logging.getLogger(__name__)
+
 OCR_SUPPORTED_MEDIA_TYPES = {"image/jpeg", "image/png", "image/webp", "application/pdf"}
+ACTIVE_OCR_STATUSES = ("pending", "processing", "review_required")
 CURRENCY_MARKERS = {
     "GBP": "GBP",
     "USD": "USD",
@@ -78,7 +82,7 @@ def easyocr_reader() -> Any:
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="OCR engine is not installed",
         ) from exc
-    return easyocr.Reader(settings.easyocr_languages, gpu=False)
+    return easyocr.Reader(settings.easyocr_languages, gpu=False, verbose=False)
 
 
 def easyocr_version() -> str | None:
@@ -368,6 +372,27 @@ def create_ocr_result(
     if not source_path.exists():
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Source file not found")
 
+    existing = db.scalar(
+        select(OCRResult)
+        .where(
+            OCRResult.user_id == user.id,
+            OCRResult.source_type == payload.source_type,
+            OCRResult.source_id == payload.source_id,
+            OCRResult.status.in_(ACTIVE_OCR_STATUSES),
+        )
+        .order_by(desc(OCRResult.created_at))
+        .limit(1)
+    )
+    if existing is not None:
+        logger.info(
+            "OCR job create idempotent hit id=%s source_type=%s source_id=%s status=%s",
+            existing.id,
+            existing.source_type,
+            existing.source_id,
+            existing.status,
+        )
+        return existing
+
     result = OCRResult(
         user_id=user.id,
         source_type=payload.source_type,
@@ -381,6 +406,13 @@ def create_ocr_result(
     create_audit_log(db, "ocr_job_create", user.id, request, {"ocr_result_id": result.id})
     db.commit()
     db.refresh(result)
+    logger.info(
+        "OCR job queued id=%s source_type=%s source_id=%s media_type=%s",
+        result.id,
+        result.source_type,
+        result.source_id,
+        media_type,
+    )
     return result
 
 
@@ -424,26 +456,34 @@ def process_ocr_result(
     result: OCRResult,
     request: Request | None = None,
 ) -> OCRResult:
-    if result.status not in {"pending", "failed"}:
+    if result.status in {"pending", "failed"}:
+        result = claim_ocr_result(db, result)
+    elif result.status != "processing":
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail="OCR result is not pending",
         )
     user = db.get(User, result.user_id)
     if user is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
-    source_path, media_type = source_path_and_media_type(
-        db,
-        user,
-        OCRJobCreate(
-            source_type=cast(OCRSourceType, result.source_type),
-            source_id=result.source_id,
-        ),
-    )
-    result.status = "processing"
-    db.commit()
+        result.status = "failed"
+        result.failure_message = "User not found"
+        db.commit()
+        db.refresh(result)
+        logger.error("OCR job failed id=%s reason=user_not_found", result.id)
+        return result
+
     started = perf_counter()
     try:
+        source_path, media_type = source_path_and_media_type(
+            db,
+            user,
+            OCRJobCreate(
+                source_type=cast(OCRSourceType, result.source_type),
+                source_id=result.source_id,
+            ),
+        )
+        if not source_path.exists():
+            raise FileNotFoundError("Source file not found")
         extraction = run_easyocr(source_path, media_type)
         duration_ms = int((perf_counter() - started) * 1000)
         apply_extraction(result, extraction, duration_ms)
@@ -463,11 +503,24 @@ def process_ocr_result(
             request=request,
         )
         create_audit_log(db, "ocr_job_processed", user.id, request, {"ocr_result_id": result.id})
+        logger.info(
+            "OCR job completed id=%s status=%s confidence=%s duration_ms=%s",
+            result.id,
+            result.status,
+            result.confidence_score,
+            duration_ms,
+        )
     except Exception as exc:
         result.status = "failed"
         result.failure_message = str(exc)[:1000]
         result.processing_duration_ms = int((perf_counter() - started) * 1000)
         create_audit_log(db, "ocr_job_failed", user.id, request, {"ocr_result_id": result.id})
+        logger.exception(
+            "OCR job failed id=%s source_type=%s source_id=%s",
+            result.id,
+            result.source_type,
+            result.source_id,
+        )
     db.commit()
     db.refresh(result)
     return result
@@ -514,6 +567,12 @@ def retry_ocr_result(
     create_audit_log(db, "ocr_job_retry", user.id, request, {"ocr_result_id": result.id})
     db.commit()
     db.refresh(result)
+    logger.info(
+        "OCR job retry queued id=%s retry_count=%s max_retries=%s",
+        result.id,
+        result.retry_count,
+        result.max_retries,
+    )
     return result
 
 
@@ -588,9 +647,87 @@ def list_ocr_results(
 
 
 def next_pending_ocr_result(db: Session) -> OCRResult | None:
-    return db.scalar(
+    return claim_next_pending_ocr_result(db)
+
+
+def claim_ocr_result(db: Session, result: OCRResult) -> OCRResult:
+    if result.status not in {"pending", "failed"}:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="OCR result is not pending",
+        )
+    result.status = "processing"
+    result.failure_message = None
+    db.commit()
+    db.refresh(result)
+    logger.info(
+        "OCR job claimed id=%s source_type=%s source_id=%s retry_count=%s",
+        result.id,
+        result.source_type,
+        result.source_id,
+        result.retry_count,
+    )
+    return result
+
+
+def claim_next_pending_ocr_result(db: Session) -> OCRResult | None:
+    query = (
         select(OCRResult)
         .where(OCRResult.status == "pending")
         .order_by(OCRResult.created_at)
         .limit(1)
     )
+    bind = db.get_bind()
+    if bind.dialect.name == "postgresql":
+        query = query.with_for_update(skip_locked=True)
+
+    result = db.scalar(query)
+    if result is None:
+        return None
+    return claim_ocr_result(db, result)
+
+
+def recover_stale_processing_ocr_results(
+    db: Session,
+    timeout_seconds: int | None = None,
+) -> int:
+    timeout = timeout_seconds or settings.ocr_processing_timeout_seconds
+    cutoff = datetime.now(UTC) - timedelta(seconds=timeout)
+    stale_results = list(
+        db.scalars(
+            select(OCRResult)
+            .where(
+                OCRResult.status == "processing",
+                OCRResult.updated_at < cutoff,
+            )
+            .order_by(OCRResult.updated_at)
+        ).all()
+    )
+    for result in stale_results:
+        if result.retry_count >= result.max_retries:
+            result.status = "failed"
+            result.failure_message = (
+                result.failure_message
+                or "OCR worker stopped while processing and retry limit was reached."
+            )
+            logger.error(
+                "OCR stale processing job failed id=%s retry_count=%s max_retries=%s",
+                result.id,
+                result.retry_count,
+                result.max_retries,
+            )
+            continue
+
+        result.retry_count += 1
+        result.status = "pending"
+        result.failure_message = "OCR worker stopped while processing; job was requeued."
+        logger.warning(
+            "OCR stale processing job requeued id=%s retry_count=%s max_retries=%s",
+            result.id,
+            result.retry_count,
+            result.max_retries,
+        )
+
+    if stale_results:
+        db.commit()
+    return len(stale_results)

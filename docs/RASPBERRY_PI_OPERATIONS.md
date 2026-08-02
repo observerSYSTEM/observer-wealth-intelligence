@@ -40,6 +40,7 @@ sudo journalctl -u observer-wealth-intelligence -f
 docker compose -f docker-compose.yml -f docker-compose.pi.yml ps
 docker compose -f docker-compose.yml -f docker-compose.pi.yml logs -f backend
 docker compose -f docker-compose.yml -f docker-compose.pi.yml logs -f ocr-worker
+docker compose -f docker-compose.yml -f docker-compose.pi.yml exec -T ocr-worker python -m app.workers.ocr_worker --healthcheck
 ```
 
 ## Update
@@ -122,6 +123,15 @@ The first real OCR run may download EasyOCR models and use more time, CPU, RAM, 
 ```bash
 docker stats
 docker compose -f docker-compose.yml -f docker-compose.pi.yml logs -f ocr-worker
+```
+
+OCR jobs are database-backed. If the Pi restarts while a receipt is processing, the
+`ocr-worker` requeues stale `processing` rows older than `OCR_PROCESSING_TIMEOUT_SECONDS`
+on startup. To refresh the worker without touching data:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.pi.yml up -d --build ocr-worker
+docker compose -f docker-compose.yml -f docker-compose.pi.yml logs --tail 100 ocr-worker
 ```
 
 ## Uninstall Without Deleting Data

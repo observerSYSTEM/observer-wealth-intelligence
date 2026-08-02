@@ -29,6 +29,7 @@ class Settings(BaseSettings):
     ocr_image_max_pixels: int = 20_000_000
     ocr_max_retries: int = 3
     ocr_worker_poll_seconds: int = 5
+    ocr_processing_timeout_seconds: int = 30 * 60
     telegram_notifications_enabled: bool = False
     telegram_bot_token: str | None = None
     telegram_chat_id: str | None = None

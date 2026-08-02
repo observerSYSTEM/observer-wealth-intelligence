@@ -20,6 +20,13 @@
 | `BACKUP_STORAGE_PATH` | No | Local filesystem path for API-created backup archives. Default is `data/backups`. |
 | `VAULT_MAX_FILE_SIZE_BYTES` | No | Maximum accepted digital-vault upload size. Default is 25 MiB. |
 | `EASYOCR_LANGUAGES` | No | JSON list of EasyOCR language codes. Default is `["en"]`. |
+| `OCR_LOW_CONFIDENCE_THRESHOLD` | No | Confidence percentage below which extracted fields are marked uncertain. |
+| `OCR_PDF_PAGE_LIMIT` | No | Maximum number of PDF pages rendered for OCR. |
+| `OCR_PDF_RENDER_DPI` | No | DPI used when rendering PDF pages for OCR. |
+| `OCR_IMAGE_MAX_PIXELS` | No | Maximum image pixels accepted by OCR before processing. |
+| `OCR_MAX_RETRIES` | No | Maximum retry count used for manual retries and stale processing recovery. |
+| `OCR_WORKER_POLL_SECONDS` | No | OCR worker polling interval when no pending job exists. |
+| `OCR_PROCESSING_TIMEOUT_SECONDS` | No | Age after which an unfinished `processing` OCR job is treated as abandoned and requeued by the worker. Default is 1800 seconds. |
 | `TELEGRAM_NOTIFICATIONS_ENABLED` | No | Enables optional Telegram sends when set to `true`. |
 | `TELEGRAM_BOT_TOKEN` | Telegram only | Telegram bot token for optional notifications. |
 | `TELEGRAM_CHAT_ID` | Telegram only | Telegram chat id for optional notifications. |

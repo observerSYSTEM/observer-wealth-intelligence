@@ -99,6 +99,13 @@ else
   echo "docker is not installed."
 fi
 
+section "OCR Worker Health"
+if command -v docker >/dev/null 2>&1; then
+  run docker compose "${compose_args[@]}" exec -T ocr-worker python -m app.workers.ocr_worker --healthcheck
+else
+  echo "docker is not installed."
+fi
+
 section "Disk Usage"
 run df -h .
 [ -d data ] && run du -sh data data/* || echo "data directory is missing."

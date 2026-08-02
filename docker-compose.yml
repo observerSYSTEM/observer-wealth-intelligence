@@ -50,6 +50,7 @@ services:
       OCR_IMAGE_MAX_PIXELS: ${OCR_IMAGE_MAX_PIXELS:-20000000}
       OCR_MAX_RETRIES: ${OCR_MAX_RETRIES:-3}
       OCR_WORKER_POLL_SECONDS: ${OCR_WORKER_POLL_SECONDS:-5}
+      OCR_PROCESSING_TIMEOUT_SECONDS: ${OCR_PROCESSING_TIMEOUT_SECONDS:-1800}
       TELEGRAM_NOTIFICATIONS_ENABLED: ${TELEGRAM_NOTIFICATIONS_ENABLED:-false}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
       TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
@@ -90,6 +91,7 @@ services:
       OCR_IMAGE_MAX_PIXELS: ${OCR_IMAGE_MAX_PIXELS:-20000000}
       OCR_MAX_RETRIES: ${OCR_MAX_RETRIES:-3}
       OCR_WORKER_POLL_SECONDS: ${OCR_WORKER_POLL_SECONDS:-5}
+      OCR_PROCESSING_TIMEOUT_SECONDS: ${OCR_PROCESSING_TIMEOUT_SECONDS:-1800}
       TELEGRAM_NOTIFICATIONS_ENABLED: ${TELEGRAM_NOTIFICATIONS_ENABLED:-false}
       TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN:-}
       TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID:-}
@@ -98,6 +100,12 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "gosu \"$${APP_USER:-owi}\" python -m app.workers.ocr_worker --healthcheck"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
   frontend:
     build:
