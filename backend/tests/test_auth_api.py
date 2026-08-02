@@ -3,7 +3,7 @@ from fastapi.testclient import TestClient
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.core.config import settings
+from app.core.config import Settings, settings
 from app.models.app_settings import AppSettings
 from app.models.audit_log import AuditLog
 from app.models.refresh_session import RefreshSession
@@ -57,6 +57,86 @@ def test_valid_login_sets_cookies(client: TestClient, second_client: TestClient)
     assert response.json()["user"]["email"] == "owner@example.com"
     assert second_client.cookies.get(settings.access_cookie_name) is not None
     assert second_client.cookies.get(settings.refresh_cookie_name) is not None
+
+
+def test_cookie_secure_default_is_lan_safe_even_in_production(monkeypatch) -> None:
+    monkeypatch.delenv("COOKIE_SECURE", raising=False)
+
+    production_settings = Settings(
+        environment="production",
+        secret_key="production-test-secret-change-me-0001",
+    )
+    https_settings = Settings(
+        environment="production",
+        secret_key="production-test-secret-change-me-0001",
+        cookie_secure=True,
+    )
+
+    assert production_settings.secure_cookies is False
+    assert https_settings.secure_cookies is True
+
+
+def test_login_sets_http_lan_cookie_attributes(
+    client: TestClient,
+    second_client: TestClient,
+) -> None:
+    register_owner(client)
+    original_secure = settings.cookie_secure
+    original_samesite = settings.cookie_samesite
+
+    try:
+        settings.cookie_secure = False
+        settings.cookie_samesite = "lax"
+        response = second_client.post(
+            "/api/v1/auth/login",
+            json={"email": "OWNER@example.com", "password": "StrongPass123!"},
+        )
+    finally:
+        settings.cookie_secure = original_secure
+        settings.cookie_samesite = original_samesite
+
+    assert response.status_code == 200
+    cookie_headers = response.headers.get_list("set-cookie")
+    cookies = {header.split("=", maxsplit=1)[0]: header for header in cookie_headers}
+
+    for cookie_name in (
+        settings.access_cookie_name,
+        settings.refresh_cookie_name,
+        settings.csrf_cookie_name,
+    ):
+        assert cookie_name in cookies
+        assert "Path=/" in cookies[cookie_name]
+        assert "SameSite=lax" in cookies[cookie_name]
+        assert "Secure" not in cookies[cookie_name]
+
+    assert "HttpOnly" in cookies[settings.access_cookie_name]
+    assert "HttpOnly" in cookies[settings.refresh_cookie_name]
+    assert "HttpOnly" not in cookies[settings.csrf_cookie_name]
+
+
+def test_login_session_authenticates_follow_up_requests(
+    client: TestClient,
+    second_client: TestClient,
+) -> None:
+    register_owner(client)
+
+    response = second_client.post(
+        "/api/v1/auth/login",
+        json={"email": "OWNER@example.com", "password": "StrongPass123!"},
+    )
+
+    assert response.status_code == 200
+    me_response = second_client.get("/api/v1/auth/me")
+    dashboard_response = second_client.get("/api/v1/dashboard/summary")
+    refresh_response = second_client.post(
+        "/api/v1/auth/refresh",
+        headers=csrf_headers(second_client),
+    )
+
+    assert me_response.status_code == 200
+    assert me_response.json()["email"] == "owner@example.com"
+    assert dashboard_response.status_code == 200
+    assert refresh_response.status_code == 200
 
 
 def test_invalid_password_uses_consistent_error(

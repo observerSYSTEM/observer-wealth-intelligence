@@ -47,7 +47,7 @@ The backend is under `backend/app`:
 
 ## CSRF And Cookies
 
-State-changing authenticated requests require `X-CSRF-Token` to match the readable CSRF cookie. Access and refresh cookies are HTTP-only. In production behind HTTPS, set `COOKIE_SECURE=true`.
+State-changing authenticated requests require `X-CSRF-Token` to match the readable CSRF cookie. Access and refresh cookies are HTTP-only. Keep `COOKIE_SECURE=false` for HTTP Raspberry Pi or localhost LAN deployments, and set `COOKIE_SECURE=true` only when OWI is served over HTTPS.
 
 ## Profile
 

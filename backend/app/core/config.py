@@ -41,7 +41,7 @@ class Settings(BaseSettings):
     access_cookie_name: str = "owi_access_token"
     refresh_cookie_name: str = "owi_refresh_token"
     csrf_cookie_name: str = "owi_csrf_token"
-    cookie_secure: bool | None = None
+    cookie_secure: bool = False
     cookie_samesite: Literal["lax", "strict", "none"] = "lax"
 
     model_config = SettingsConfigDict(
@@ -61,9 +61,7 @@ class Settings(BaseSettings):
 
     @property
     def secure_cookies(self) -> bool:
-        if self.cookie_secure is not None:
-            return self.cookie_secure
-        return self.environment == "production"
+        return self.cookie_secure
 
 
 @lru_cache

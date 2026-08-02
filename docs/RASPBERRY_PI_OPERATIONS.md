@@ -25,7 +25,7 @@ chmod +x deploy/*.sh docker/backend/entrypoint.sh
 ./deploy/install-pi.sh
 ```
 
-Set `SECRET_KEY`, `POSTGRES_PASSWORD`, `COOKIE_SECURE`, `CORS_ORIGINS`, and storage paths before exposing the service.
+Set `SECRET_KEY`, `POSTGRES_PASSWORD`, `COOKIE_SECURE`, `CORS_ORIGINS`, and storage paths before exposing the service. Keep `COOKIE_SECURE=false` while serving OWI over plain HTTP on a LAN. Use `COOKIE_SECURE=true` only after HTTPS is enabled.
 
 ## Start, Stop, Status, Logs
 

@@ -27,6 +27,8 @@ services:
       ENVIRONMENT: ${ENVIRONMENT:-development}
       SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env before starting Compose}
       ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-60}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      COOKIE_SAMESITE: ${COOKIE_SAMESITE:-lax}
       DATABASE_URL: ${DATABASE_URL:?Set DATABASE_URL in .env before starting Compose}
       CORS_ORIGINS: ${CORS_ORIGINS:-["http://localhost:3000","http://localhost:8080"]}
       RECEIPT_MAX_FILE_SIZE_BYTES: ${RECEIPT_MAX_FILE_SIZE_BYTES:-10485760}

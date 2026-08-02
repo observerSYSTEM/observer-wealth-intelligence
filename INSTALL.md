@@ -55,14 +55,23 @@ Keep these storage paths on persistent disk and size them for payment screenshot
 
 The OCR foundation uses EasyOCR, PyMuPDF, and Pillow. Compose runs OCR in the separate `ocr-worker` service so API uploads stay responsive while documents are processed locally.
 
-For HTTPS production deployments, set:
+For HTTP Raspberry Pi or localhost LAN deployments, keep:
+
+```bash
+COOKIE_SECURE=false
+COOKIE_SAMESITE=lax
+```
+
+The `Secure` cookie flag is only valid when the browser reaches OWI over HTTPS. If
+`COOKIE_SECURE=true` is used on an HTTP LAN URL, browsers will ignore the login cookies and
+authenticated requests will immediately return `401`.
+
+For HTTPS deployments, set:
 
 ```bash
 COOKIE_SECURE=true
 COOKIE_SAMESITE=lax
 ```
-
-For localhost development, keep `COOKIE_SECURE=false`.
 
 ## Development Install
 

@@ -23,7 +23,7 @@
 | `TELEGRAM_CHAT_ID` | Telegram only | Telegram chat id for optional notifications. |
 | `BACKUP_SCHEDULE_ENABLED` | No | Initial scheduled backup job state. |
 | `BACKUP_SCHEDULE_TIME` | No | Initial backup schedule time in `HH:MM`. |
-| `COOKIE_SECURE` | Production HTTPS | Forces auth cookies to use the Secure flag. |
+| `COOKIE_SECURE` | HTTPS only | Forces auth cookies to use the Secure flag. Keep `false` for HTTP Raspberry Pi or localhost LAN deployments. |
 | `COOKIE_SAMESITE` | No | Auth cookie SameSite policy. |
 | `DATABASE_URL` | Yes | SQLAlchemy PostgreSQL connection string. Must use the same password as `POSTGRES_PASSWORD` for Compose deployments. |
 | `POSTGRES_DB` | No | PostgreSQL database name used by Docker Compose. |
