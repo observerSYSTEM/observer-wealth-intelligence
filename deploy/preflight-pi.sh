@@ -154,7 +154,7 @@ check_data_dirs() {
     if [ -w "$path" ]; then
       pass "$path is writable"
     else
-      fail "$path is not writable. Run: sudo chown -R 10001:$(id -g) data && sudo chmod -R u+rwX,g+rwX,o-rwx data"
+      fail "$path is not writable. Set PUID=$(id -u) and PGID=$(id -g) in .env, then run: sudo chown -R $(id -u):$(id -g) data && sudo chmod -R u+rwX,g+rwX,o-rwx data"
     fi
   done
 }

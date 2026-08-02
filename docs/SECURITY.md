@@ -22,7 +22,7 @@
 
 ## Informational
 
-- Backend and OCR worker containers run as UID/GID `10001`.
+- Backend and OCR worker containers run as the non-root UID/GID configured by `PUID` and `PGID`, defaulting to `10001:10001` when unset.
 - Frontend container runs as non-root `nextjs`.
 - PostgreSQL and Nginx use official upstream images. Any root-owned startup behavior in those images must be verified on the Pi and documented from `docker compose exec <service> id`.
 - Auth tokens are stored in HTTP-only cookies.

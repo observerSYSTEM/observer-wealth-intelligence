@@ -48,6 +48,10 @@ postgres_user="${POSTGRES_USER:-$(env_value POSTGRES_USER)}"
 postgres_user="${postgres_user:-observer}"
 postgres_db="${POSTGRES_DB:-$(env_value POSTGRES_DB)}"
 postgres_db="${postgres_db:-observer_wealth}"
+puid="${PUID:-$(env_value PUID)}"
+pgid="${PGID:-$(env_value PGID)}"
+puid="${puid:-10001}"
+pgid="${pgid:-10001}"
 
 receipt_path="${RECEIPT_STORAGE_PATH:-$(env_value RECEIPT_STORAGE_PATH)}"
 asset_path="${ASSET_STORAGE_PATH:-$(env_value ASSET_STORAGE_PATH)}"
@@ -69,6 +73,7 @@ printf 'Repository: %s\n' "$ROOT"
 printf 'Branch: %s\n' "$(git branch --show-current 2>/dev/null || echo unknown)"
 printf 'Commit: %s\n' "$(git rev-parse --short HEAD 2>/dev/null || echo unknown)"
 printf 'Base URL: %s\n' "$base_url"
+printf 'Configured storage UID/GID: %s:%s\n' "$puid" "$pgid"
 
 section "App Version And Health"
 if command -v curl >/dev/null 2>&1; then
@@ -105,12 +110,45 @@ for path in "$receipt_path" "$asset_path" "$vault_path" "$ocr_path" "$backup_pat
     [ -r "$path" ] && permissions="${permissions}r" || permissions="${permissions}-"
     [ -w "$path" ] && permissions="${permissions}w" || permissions="${permissions}-"
     [ -x "$path" ] && permissions="${permissions}x" || permissions="${permissions}-"
-    printf '%s %s ' "$permissions" "$path"
+    if (: > "$path/.owi-diagnostics-write-test") 2>/dev/null; then
+      rm -f "$path/.owi-diagnostics-write-test"
+      host_write="host-write-ok"
+    else
+      host_write="host-write-failed"
+    fi
+    printf '%s %s %s ' "$permissions" "$host_write" "$path"
     run ls -ld "$path"
   else
     printf 'missing %s\n' "$path"
   fi
 done
+
+section "Container Storage Writability"
+if command -v docker >/dev/null 2>&1; then
+  storage_probe='
+    resolve_path() {
+      case "$1" in
+        /*) printf "%s\n" "$1" ;;
+        *) printf "/app/%s\n" "$1" ;;
+      esac
+    }
+    for raw in "${RECEIPT_STORAGE_PATH:-data/receipts}" "${ASSET_STORAGE_PATH:-data/assets}" "${VAULT_STORAGE_PATH:-data/vault}" "${OCR_STORAGE_PATH:-data/ocr}" "${BACKUP_STORAGE_PATH:-data/backups}"; do
+      path="$(resolve_path "$raw")"
+      probe="$path/.owi-diagnostics-write-test-$$"
+      if [ -d "$path" ] && [ -w "$path" ] && [ -x "$path" ] && (: > "$probe") 2>/dev/null; then
+        rm -f "$probe"
+        printf "writable %s\n" "$path"
+      else
+        rm -f "$probe" 2>/dev/null || true
+        printf "NOT_WRITABLE %s\n" "$path"
+      fi
+    done
+  '
+  run docker compose "${compose_args[@]}" exec -T -u "${puid}:${pgid}" backend sh -c "$storage_probe"
+  run docker compose "${compose_args[@]}" exec -T -u "${puid}:${pgid}" ocr-worker sh -c "$storage_probe"
+else
+  echo "docker is not installed."
+fi
 
 section "Backup Status"
 if command -v systemctl >/dev/null 2>&1; then

@@ -9,7 +9,7 @@ ARG APP_GID=10001
 WORKDIR /app
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends curl libgl1 libglib2.0-0 \
+    && apt-get install -y --no-install-recommends curl gosu libgl1 libglib2.0-0 \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --system --gid "$APP_GID" owi \
     && useradd --system --uid "$APP_UID" --gid owi --home-dir /app --shell /usr/sbin/nologin owi
@@ -21,7 +21,7 @@ COPY --chown=owi:owi backend /app
 COPY docker/backend/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-USER owi
+USER root
 EXPOSE 8000
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

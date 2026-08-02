@@ -30,9 +30,15 @@ sudo systemctl restart observer-wealth-intelligence
 ## Permission Denied Writing Files
 
 ```bash
-sudo chown -R 10001:10001 data
-docker compose -f docker-compose.yml -f docker-compose.pi.yml restart backend ocr-worker
+sed -i "s/^PUID=.*/PUID=$(id -u)/; s/^PGID=.*/PGID=$(id -g)/" .env
+sudo chown -R "$(id -u):$(id -g)" data
+sudo chmod -R u+rwX,g+rwX,o-rwx data
+docker compose -f docker-compose.yml -f docker-compose.pi.yml up --build -d backend ocr-worker
 ```
+
+The backend and OCR worker run as a non-root `owi` user. `PUID` and `PGID` map that user
+to a host UID/GID. Do not use `chmod 777`; OWI expects private owner/group write access to
+`data/receipts`, `data/assets`, `data/vault`, `data/ocr`, and `data/backups`.
 
 ## OCR Model Download Fails
 

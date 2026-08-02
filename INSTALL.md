@@ -30,6 +30,8 @@ Uploaded files and OCR artifacts are stored outside PostgreSQL. The default layo
 
 ```bash
 APP_VERSION=1.0.0-rc.1
+PUID=
+PGID=
 RECEIPT_STORAGE_PATH=data/receipts
 RECEIPT_MAX_FILE_SIZE_BYTES=10485760
 ASSET_STORAGE_PATH=data/assets
@@ -51,7 +53,16 @@ BACKUP_SCHEDULE_ENABLED=false
 BACKUP_SCHEDULE_TIME=02:30
 ```
 
-Keep these storage paths on persistent disk and size them for payment screenshots, PDFs, asset documents, vault documents, OCR text artifacts, and backups. On Raspberry Pi deployments, prefer an SD card or external disk with enough spare capacity for the database volume, uploaded files, OCR output, and backup archives.
+Keep these storage paths on persistent disk and size them for payment screenshots, PDFs, asset documents, vault documents, OCR text artifacts, and backups. On Raspberry Pi deployments, prefer an SD card or ext4 external disk with enough spare capacity for the database volume, uploaded files, OCR output, and backup archives.
+
+Docker runs the backend and OCR worker as a non-root `owi` user. `PUID` and `PGID` control
+that runtime identity. On Raspberry Pi deployments, set them to the host deployment user so
+the containers, backup scripts, and shell maintenance commands can all access `data/`:
+
+```bash
+PUID=$(id -u)
+PGID=$(id -g)
+```
 
 The OCR foundation uses EasyOCR, PyMuPDF, and Pillow. Compose runs OCR in the separate `ocr-worker` service so API uploads stay responsive while documents are processed locally.
 
@@ -106,6 +117,7 @@ git clone <repository-url> /opt/observer-wealth-intelligence
 cd /opt/observer-wealth-intelligence
 git switch release/v1.0-rc1
 cp .env.example .env
+sed -i "s/^PUID=.*/PUID=$(id -u)/; s/^PGID=.*/PGID=$(id -g)/" .env
 nano .env
 ./deploy/preflight-pi.sh
 chmod +x deploy/*.sh docker/backend/entrypoint.sh

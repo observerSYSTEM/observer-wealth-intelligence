@@ -20,12 +20,13 @@ git clone <private-repository-url> /opt/observer-wealth-intelligence
 cd /opt/observer-wealth-intelligence
 git switch release/v1.0-rc1
 cp .env.example .env
+sed -i "s/^PUID=.*/PUID=$(id -u)/; s/^PGID=.*/PGID=$(id -g)/" .env
 nano .env
 chmod +x deploy/*.sh docker/backend/entrypoint.sh
 ./deploy/install-pi.sh
 ```
 
-Set `SECRET_KEY`, `POSTGRES_PASSWORD`, `COOKIE_SECURE`, `CORS_ORIGINS`, and storage paths before exposing the service. Keep `COOKIE_SECURE=false` while serving OWI over plain HTTP on a LAN. Use `COOKIE_SECURE=true` only after HTTPS is enabled.
+Set `SECRET_KEY`, `POSTGRES_PASSWORD`, `COOKIE_SECURE`, `CORS_ORIGINS`, `PUID`, `PGID`, and storage paths before exposing the service. Keep `COOKIE_SECURE=false` while serving OWI over plain HTTP on a LAN. Use `COOKIE_SECURE=true` only after HTTPS is enabled.
 
 ## Start, Stop, Status, Logs
 
@@ -93,21 +94,25 @@ curl http://localhost:${HTTP_PORT:-8080}/api/v1/health
 
 ## Add Storage
 
-Mount external storage under `/opt/observer-wealth-intelligence/data` or update the storage paths in `.env`. Then run:
+Mount external storage under `/opt/observer-wealth-intelligence/data` or update the storage paths in `.env`. Use a Linux filesystem such as ext4 so Docker can apply owner/group permissions. Then run:
 
 ```bash
-sudo chown -R 10001:"$(id -g)" data
+sudo chown -R "$(grep '^PUID=' .env | cut -d= -f2):$(grep '^PGID=' .env | cut -d= -f2)" data
 sudo chmod -R u+rwX,g+rwX,o-rwx data
 docker compose -f docker-compose.yml -f docker-compose.pi.yml restart backend ocr-worker
 ```
 
 ## Permissions
 
-Backend and OCR worker run as UID/GID `10001`. Runtime file roots must be writable by that identity:
+Backend and OCR worker run as the non-root UID/GID configured by `PUID` and `PGID`.
+On Raspberry Pi deployments, use the deployment user's ids so Docker services, backup scripts,
+and shell maintenance commands share ownership:
 
 ```bash
-sudo chown -R 10001:"$(id -g)" data
+sed -i "s/^PUID=.*/PUID=$(id -u)/; s/^PGID=.*/PGID=$(id -g)/" .env
+sudo chown -R "$(id -u):$(id -g)" data
 sudo chmod -R u+rwX,g+rwX,o-rwx data
+docker compose -f docker-compose.yml -f docker-compose.pi.yml up --build -d backend ocr-worker
 ```
 
 ## OCR Model Download

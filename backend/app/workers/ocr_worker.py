@@ -1,6 +1,7 @@
 import time
 
 from app.core.config import settings
+from app.core.storage import ensure_storage_paths_writable
 from app.db.session import SessionLocal
 from app.services.ocr import next_pending_ocr_result, process_ocr_result
 
@@ -18,6 +19,7 @@ def run_once() -> bool:
 
 
 def run_forever() -> None:
+    ensure_storage_paths_writable()
     while True:
         processed = run_once()
         if not processed:

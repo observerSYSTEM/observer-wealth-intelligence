@@ -5,6 +5,8 @@
 | `APP_NAME` | No | API title shown in OpenAPI metadata. |
 | `APP_VERSION` | No | Release version returned by the health endpoint. Default is `1.0.0-rc.1`. |
 | `ENVIRONMENT` | No | `development`, `test`, or `production`. |
+| `PUID` | No | Non-root UID used by backend and OCR worker inside Docker. Set to `id -u` on Raspberry Pi hosts. Defaults to `10001` when unset. |
+| `PGID` | No | Non-root GID used by backend and OCR worker inside Docker. Set to `id -g` on Raspberry Pi hosts. Defaults to `10001` when unset. |
 | `SECRET_KEY` | Yes | JWT signing secret. Required by Compose and intentionally blank in `.env.example`. |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | No | JWT access token lifetime. |
 | `REFRESH_TOKEN_EXPIRE_DAYS` | No | Refresh-session lifetime. |
@@ -36,5 +38,9 @@
 | `INCLUDE_SECRETS_IN_BACKUP` | No | Includes `.env` in backup archives only when set to `true`. Use encrypted storage. |
 
 Uploaded files, OCR artifacts, and backup archives should be stored on persistent disk. PostgreSQL backups do not include file bytes; the backup script copies `RECEIPT_STORAGE_PATH`, `ASSET_STORAGE_PATH`, `VAULT_STORAGE_PATH`, and `OCR_STORAGE_PATH` separately.
+
+Docker startup creates `data/receipts`, `data/assets`, `data/vault`, `data/ocr`, and
+`data/backups`, assigns them to `PUID:PGID`, applies private owner/group permissions, and
+fails startup if the backend user cannot write to any configured storage path.
 
 `.env` is ignored by git and must remain local to the deployment host. The install scripts generate `SECRET_KEY`, `POSTGRES_PASSWORD`, and `DATABASE_URL` when creating a new `.env`; manual installs must provide equivalent strong values before running Compose.
