@@ -6,6 +6,15 @@ import { FormEvent, useEffect, useState } from "react";
 import { AppFrame } from "@/components/app-frame";
 import { Field, FormMessage, inputClass } from "@/components/form-shell";
 import { ProtectedRoute } from "@/components/protected-route";
+import {
+  buttonPrimaryClass,
+  buttonSecondaryClass,
+  EmptyState,
+  MetricCard,
+  PageHeader,
+  Panel,
+  StatusBadge
+} from "@/components/wealth-ui";
 import { apiFetch, errorMessage } from "@/lib/api";
 import { formatFileSize, statusLabel } from "@/lib/format";
 import type {
@@ -121,142 +130,152 @@ export default function AutomationPage() {
     }
   }
 
+  const latestBackup = backups[0];
+  const verifiedCount = backups.filter((backup) => backup.restore_verified).length;
+
   return (
     <ProtectedRoute ownerOnly>
       <AppFrame>
-        <section className="grid gap-4 py-6 lg:grid-cols-[0.75fr_1.25fr]">
-          <div className="space-y-4">
-            <form
-              onSubmit={(event) => void saveSchedule(event)}
-              className="rounded-lg border border-black/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/5"
-            >
-              <div className="flex items-center gap-2">
-                <DatabaseBackup className="h-5 w-5" aria-hidden="true" />
-                <h2 className="text-lg font-semibold">Automation</h2>
-              </div>
-              <div className="mt-5 space-y-4">
-                <FormMessage tone="success">{message}</FormMessage>
-                <FormMessage tone="error">{error}</FormMessage>
-                <label className="flex items-center gap-3 text-sm font-medium">
-                  <input
-                    type="checkbox"
+        <section className="space-y-5 py-5">
+          <PageHeader
+            eyebrow="Operations"
+            title="Automation Control Centre"
+            subtitle="Scheduled Raspberry Pi backups, restore verification, and job status."
+            icon={<DatabaseBackup className="h-5 w-5" aria-hidden="true" />}
+            actions={
+              <button type="button" disabled={busy} onClick={() => void runBackup()} className={buttonPrimaryClass}>
+                <Play className="h-4 w-4" aria-hidden="true" />
+                Run backup
+              </button>
+            }
+          />
+          <FormMessage tone="success">{message}</FormMessage>
+          <FormMessage tone="error">{error}</FormMessage>
+
+          <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <MetricCard label="Jobs" value={String(jobs.length)} icon={<DatabaseBackup className="h-5 w-5" />} />
+            <MetricCard label="Backups" value={String(backups.length)} icon={<DatabaseBackup className="h-5 w-5" />} />
+            <MetricCard label="Verified" value={String(verifiedCount)} icon={<ShieldCheck className="h-5 w-5" />} tone="positive" />
+            <MetricCard label="Latest" value={latestBackup ? statusLabel(latestBackup.status) : "None"} icon={<DatabaseBackup className="h-5 w-5" />} />
+          </section>
+
+          <div className="grid gap-5 xl:grid-cols-[0.78fr_1.22fr]">
+            <div className="space-y-5">
+              <Panel title="Backup Schedule" icon={<DatabaseBackup className="h-5 w-5" aria-hidden="true" />}>
+                <form onSubmit={(event) => void saveSchedule(event)} className="space-y-4">
+                  <label className="flex min-h-12 items-center justify-between gap-3 rounded-md border border-[color:var(--owi-border)] bg-[color:var(--owi-surface-muted)] px-3 py-2 text-sm font-semibold">
+                    <span>Scheduled backups</span>
+                    <input
+                      type="checkbox"
                       checked={schedule.enabled}
                       onChange={(event) => setSchedule({ ...schedule, enabled: event.target.checked })}
-                    className="h-4 w-4 accent-moss"
-                  />
-                  Scheduled backups
-                </label>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <Field id="backup-cadence" label="Cadence">
-                    <select
-                      id="backup-cadence"
-                      value={schedule.frequency}
-                      onChange={(event) => setSchedule({ ...schedule, frequency: event.target.value })}
-                      className={inputClass}
-                    >
-                      <option value="daily">Daily</option>
-                      <option value="weekly">Weekly</option>
-                      <option value="monthly">Monthly</option>
-                      <option value="disabled">Disabled</option>
-                    </select>
-                  </Field>
-                  <Field id="backup-time" label="Time">
-                    <input
-                      id="backup-time"
-                      type="time"
-                      value={schedule.run_time}
-                      onChange={(event) =>
-                        setSchedule({ ...schedule, run_time: event.target.value })
-                      }
-                      className={inputClass}
+                      className="h-4 w-4 accent-moss"
                     />
-                  </Field>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    type="submit"
-                    disabled={busy}
-                    className="rounded-md bg-moss px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
-                  >
-                    Save
-                  </button>
-                  <button
-                    type="button"
-                    disabled={busy}
-                    onClick={() => void runBackup()}
-                    className="inline-flex items-center gap-2 rounded-md border border-black/10 px-4 py-2.5 text-sm font-semibold disabled:opacity-60 dark:border-white/10"
-                  >
-                    <Play className="h-4 w-4" aria-hidden="true" />
-                    Run
-                  </button>
-                </div>
-              </div>
-            </form>
-            <div className="rounded-lg border border-black/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/5">
-              <h3 className="font-semibold">Jobs</h3>
-              <div className="mt-3 space-y-2">
-                {jobs.map((job) => (
-                  <div key={job.id} className="rounded-md bg-mist p-3 text-sm dark:bg-white/10">
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="font-medium">{job.name}</span>
-                      <span>{statusLabel(job.status)}</span>
-                    </div>
-                    <p className="mt-1 text-black/60 dark:text-white/60">
-                      {job.enabled ? `${job.cadence} at ${job.run_at_time}` : "disabled"}
-                    </p>
+                  </label>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Field id="backup-cadence" label="Cadence">
+                      <select
+                        id="backup-cadence"
+                        value={schedule.frequency}
+                        onChange={(event) => setSchedule({ ...schedule, frequency: event.target.value })}
+                        className={inputClass}
+                      >
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="disabled">Disabled</option>
+                      </select>
+                    </Field>
+                    <Field id="backup-time" label="Time">
+                      <input
+                        id="backup-time"
+                        type="time"
+                        value={schedule.run_time}
+                        onChange={(event) => setSchedule({ ...schedule, run_time: event.target.value })}
+                        className={inputClass}
+                      />
+                    </Field>
                   </div>
-                ))}
-              </div>
-            </div>
-          </div>
+                  <div className="flex flex-wrap gap-2">
+                    <button type="submit" disabled={busy} className={buttonPrimaryClass}>
+                      Save
+                    </button>
+                    <button type="button" disabled={busy} onClick={() => void runBackup()} className={buttonSecondaryClass}>
+                      <Play className="h-4 w-4" aria-hidden="true" />
+                      Run
+                    </button>
+                  </div>
+                </form>
+              </Panel>
 
-          <div className="space-y-3">
-            {backups.map((backup) => (
-              <article
-                key={backup.id}
-                className="rounded-lg border border-black/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/5"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h3 className="font-semibold">{backup.backup_filename ?? backup.id}</h3>
-                    <p className="mt-1 text-sm text-black/60 dark:text-white/60">
-                      {new Date(backup.started_at).toLocaleString("en-GB")}
-                    </p>
-                  </div>
-                  <span className="rounded-md bg-mist px-2 py-1 text-xs font-semibold text-ink dark:bg-white/10 dark:text-white">
-                    {statusLabel(backup.status)}
-                  </span>
+              <Panel title="Jobs" icon={<DatabaseBackup className="h-5 w-5" aria-hidden="true" />}>
+                <div className="space-y-2">
+                  {jobs.map((job) => (
+                    <div key={job.id} className="rounded-md border border-[color:var(--owi-border)] bg-[color:var(--owi-surface-muted)] p-3 text-sm">
+                      <div className="flex items-center justify-between gap-3">
+                        <span className="font-semibold">{job.name}</span>
+                        <StatusBadge status={job.status} />
+                      </div>
+                      <p className="mt-1 text-[color:var(--owi-muted)]">
+                        {job.enabled ? `${job.cadence} at ${job.run_at_time}` : "disabled"}
+                      </p>
+                      {job.next_run_at ? (
+                        <p className="mt-1 text-[color:var(--owi-muted)]">
+                          Next {new Date(job.next_run_at).toLocaleString("en-GB")}
+                        </p>
+                      ) : null}
+                    </div>
+                  ))}
+                  {!jobs.length ? <EmptyState title="No automation jobs" /> : null}
                 </div>
-                <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                  <Metric label="Size" value={formatFileSize(backup.size_bytes)} />
-                  <Metric label="Verified" value={backup.restore_verified ? "Yes" : "No"} />
-                  <Metric label="Trigger" value={statusLabel(backup.trigger)} />
-                </div>
-                {backup.sha256 ? (
-                  <p className="mt-4 break-all rounded-md bg-mist p-3 text-xs dark:bg-white/10">
-                    {backup.sha256}
-                  </p>
-                ) : null}
-                {backup.verification_message ? (
-                  <p className="mt-3 text-sm text-black/60 dark:text-white/60">
-                    {backup.verification_message}
-                  </p>
-                ) : null}
-                <button
-                  type="button"
-                  onClick={() => void verifyBackup(backup.id)}
-                  className="mt-4 inline-flex items-center gap-2 rounded-md border border-black/10 px-3 py-2 text-sm font-semibold dark:border-white/10"
-                >
-                  <ShieldCheck className="h-4 w-4" aria-hidden="true" />
-                  Verify
-                </button>
-              </article>
-            ))}
-            {!backups.length ? (
-              <div className="rounded-lg border border-dashed border-black/15 p-5 text-sm text-black/60 dark:border-white/15 dark:text-white/60">
-                No backups yet.
+              </Panel>
+            </div>
+
+            <Panel title="Backup History" icon={<ShieldCheck className="h-5 w-5" aria-hidden="true" />}>
+              <div className="space-y-3">
+                {backups.map((backup) => (
+                  <article
+                    key={backup.id}
+                    className="rounded-lg border border-[color:var(--owi-border)] bg-[color:var(--owi-surface-muted)] p-4"
+                  >
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h2 className="break-words font-semibold">{backup.backup_filename ?? backup.id}</h2>
+                        <p className="mt-1 text-sm text-[color:var(--owi-muted)]">
+                          {new Date(backup.started_at).toLocaleString("en-GB")}
+                        </p>
+                      </div>
+                      <StatusBadge status={backup.status} />
+                    </div>
+                    <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                      <Metric label="Size" value={formatFileSize(backup.size_bytes)} />
+                      <Metric label="Verified" value={backup.restore_verified ? "Yes" : "No"} />
+                      <Metric label="Trigger" value={statusLabel(backup.trigger)} />
+                    </div>
+                    {backup.sha256 ? (
+                      <p className="mt-4 break-all rounded-md border border-[color:var(--owi-border)] bg-[color:var(--owi-surface)] p-3 text-xs">
+                        {backup.sha256}
+                      </p>
+                    ) : null}
+                    {backup.verification_message ? (
+                      <p className="mt-3 text-sm leading-6 text-[color:var(--owi-muted)]">
+                        {backup.verification_message}
+                      </p>
+                    ) : null}
+                    {backup.error_message ? (
+                      <p className="mt-3 rounded-md border border-copper/30 bg-copper/10 p-3 text-sm text-copper dark:text-[#ffb088]">
+                        {backup.error_message}
+                      </p>
+                    ) : null}
+                    <button type="button" onClick={() => void verifyBackup(backup.id)} className={`${buttonSecondaryClass} mt-4`}>
+                      <ShieldCheck className="h-4 w-4" aria-hidden="true" />
+                      Verify
+                    </button>
+                  </article>
+                ))}
+                {!backups.length ? <EmptyState title="No backups yet" /> : null}
               </div>
-            ) : null}
+            </Panel>
           </div>
         </section>
       </AppFrame>
@@ -266,8 +285,8 @@ export default function AutomationPage() {
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-md bg-mist p-3 text-sm dark:bg-white/10">
-      <p className="text-black/60 dark:text-white/60">{label}</p>
+    <div className="rounded-md border border-[color:var(--owi-border)] bg-[color:var(--owi-surface)] p-3 text-sm">
+      <p className="text-[color:var(--owi-muted)]">{label}</p>
       <p className="mt-1 font-semibold">{value}</p>
     </div>
   );

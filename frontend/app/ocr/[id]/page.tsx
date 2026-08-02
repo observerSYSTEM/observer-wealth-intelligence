@@ -7,6 +7,14 @@ import { FormEvent, useEffect, useState } from "react";
 import { AppFrame } from "@/components/app-frame";
 import { Field, FormMessage, inputClass } from "@/components/form-shell";
 import { ProtectedRoute } from "@/components/protected-route";
+import {
+  buttonPrimaryClass,
+  buttonSecondaryClass,
+  MetricCard,
+  OCRReviewPanel,
+  PageHeader,
+  StatusBadge
+} from "@/components/wealth-ui";
 import { apiFetch, errorMessage } from "@/lib/api";
 import { formatMoney, formatPercent, statusLabel } from "@/lib/format";
 import type { OCRResult } from "@/types/finance";
@@ -123,148 +131,132 @@ export default function OCRResultPage() {
   return (
     <ProtectedRoute>
       <AppFrame>
-        <section className="mx-auto w-full max-w-4xl space-y-4 py-6">
-          <div className="flex items-center gap-2">
-            <ScanText className="h-5 w-5" aria-hidden="true" />
-            <h2 className="text-xl font-semibold">OCR Result</h2>
-          </div>
+        <section className="space-y-5 py-5">
+          <PageHeader
+            eyebrow="OCR detail"
+            title="OCR Result"
+            subtitle="Review extracted fields before confirmation."
+            icon={<ScanText className="h-5 w-5" aria-hidden="true" />}
+          />
           <FormMessage tone="success">{message}</FormMessage>
           <FormMessage tone="error">{error}</FormMessage>
           {result ? (
-            <div className="grid gap-4 lg:grid-cols-[0.8fr_1.2fr]">
-              <article className="rounded-lg border border-black/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/5">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-sm font-semibold">{statusLabel(result.source_type)}</span>
-                  <span className="rounded-md bg-mist px-2 py-1 text-xs font-semibold text-ink dark:bg-white/10 dark:text-white">
-                    {statusLabel(result.status)}
-                  </span>
-                </div>
-                {result.amount && result.currency ? (
-                  <p className="mt-4 text-3xl font-semibold">
-                    {formatMoney(result.amount, result.currency)}
-                  </p>
-                ) : null}
-                <p className="mt-3 text-sm text-black/60 dark:text-white/60">
-                  Confidence {formatPercent(result.confidence_score)}
-                </p>
-                {result.failure_message ? (
-                  <p className="mt-3 rounded-md border border-copper/30 bg-copper/10 p-3 text-sm text-copper dark:text-[#ffb088]">
-                    {result.failure_message}
-                  </p>
-                ) : null}
-                <pre className="mt-4 max-h-80 overflow-auto rounded-md bg-mist p-3 text-xs dark:bg-white/10">
-                  {result.extracted_text || "No text extracted."}
-                </pre>
-              </article>
-              <form
-                onSubmit={(event) => void confirmResult(event)}
-                className="rounded-lg border border-black/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/5"
-              >
-                <div className="space-y-4">
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <Field id="ocr-detail-amount" label="Amount">
-                      <input
-                        id="ocr-detail-amount"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        value={form.amount}
-                        onChange={(event) => setForm({ ...form, amount: event.target.value })}
-                        className={inputClass}
-                      />
-                    </Field>
-                    <Field id="ocr-detail-currency" label="Currency">
-                      <select
-                        id="ocr-detail-currency"
-                        value={form.currency}
-                        onChange={(event) => setForm({ ...form, currency: event.target.value })}
-                        className={inputClass}
-                      >
-                        {["GBP", "USD", "NGN", "EUR"].map((currency) => (
-                          <option key={currency} value={currency}>
-                            {currency}
-                          </option>
-                        ))}
-                      </select>
-                    </Field>
-                  </div>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <Field id="ocr-detail-date" label="Date">
-                      <input
-                        id="ocr-detail-date"
-                        type="date"
-                        value={form.document_date}
-                        onChange={(event) => setForm({ ...form, document_date: event.target.value })}
-                        className={inputClass}
-                      />
-                    </Field>
-                    <Field id="ocr-detail-time" label="Time">
-                      <input
-                        id="ocr-detail-time"
-                        type="time"
-                        value={form.document_time}
-                        onChange={(event) => setForm({ ...form, document_time: event.target.value })}
-                        className={inputClass}
-                      />
-                    </Field>
-                  </div>
-                  <Field id="ocr-detail-reference" label="Reference">
-                    <input
-                      id="ocr-detail-reference"
-                      value={form.reference}
-                      onChange={(event) => setForm({ ...form, reference: event.target.value })}
-                      className={inputClass}
-                    />
-                  </Field>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <Field id="ocr-detail-recipient" label="Recipient">
-                      <input
-                        id="ocr-detail-recipient"
-                        value={form.recipient}
-                        onChange={(event) => setForm({ ...form, recipient: event.target.value })}
-                        className={inputClass}
-                      />
-                    </Field>
-                    <Field id="ocr-detail-sender" label="Sender">
-                      <input
-                        id="ocr-detail-sender"
-                        value={form.sender}
-                        onChange={(event) => setForm({ ...form, sender: event.target.value })}
-                        className={inputClass}
-                      />
-                    </Field>
-                  </div>
+            <>
+              <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <MetricCard label="Status" value={statusLabel(result.status)} icon={<ScanText className="h-5 w-5" />} />
+                <MetricCard label="Confidence" value={formatPercent(result.confidence_score)} icon={<ScanText className="h-5 w-5" />} />
+                <MetricCard
+                  label="Amount"
+                  value={result.amount && result.currency ? formatMoney(result.amount, result.currency) : "None"}
+                  icon={<ScanText className="h-5 w-5" />}
+                />
+                <MetricCard label="Retries" value={`${result.retry_count}/${result.max_retries}`} icon={<RotateCw className="h-5 w-5" />} />
+              </section>
+              <div className="grid gap-5 xl:grid-cols-[0.95fr_1.05fr]">
+                <OCRReviewPanel result={result}>
                   <div className="flex flex-wrap gap-2">
-                    <button
-                      type="submit"
-                      disabled={busy}
-                      className="inline-flex items-center gap-2 rounded-md bg-moss px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
-                    >
-                      <Check className="h-4 w-4" aria-hidden="true" />
-                      Confirm
-                    </button>
-                    <button
-                      type="button"
-                      disabled={busy}
-                      onClick={() => void runAction("retry", "OCR result queued for retry.")}
-                      className="inline-flex items-center gap-2 rounded-md border border-black/10 px-4 py-2.5 text-sm font-semibold disabled:opacity-60 dark:border-white/10"
-                    >
-                      <RotateCw className="h-4 w-4" aria-hidden="true" />
-                      Retry
-                    </button>
-                    <button
-                      type="button"
-                      disabled={busy}
-                      onClick={() => void runAction("cancel", "OCR result cancelled.")}
-                      className="inline-flex items-center gap-2 rounded-md border border-black/10 px-4 py-2.5 text-sm font-semibold disabled:opacity-60 dark:border-white/10"
-                    >
-                      <XCircle className="h-4 w-4" aria-hidden="true" />
-                      Cancel
-                    </button>
+                    <StatusBadge status={result.source_type} tone="info" />
+                    {result.document_date ? <StatusBadge status={result.document_date} tone="neutral" /> : null}
+                    {result.reference ? <StatusBadge status="reference_found" tone="success" /> : null}
                   </div>
-                </div>
-              </form>
-            </div>
+                </OCRReviewPanel>
+
+                <form
+                  onSubmit={(event) => void confirmResult(event)}
+                  className="rounded-lg border border-[color:var(--owi-border)] bg-[color:var(--owi-surface)] p-5 shadow-sm"
+                >
+                  <div className="space-y-4">
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <Field id="ocr-detail-amount" label="Amount">
+                        <input
+                          id="ocr-detail-amount"
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          value={form.amount}
+                          onChange={(event) => setForm({ ...form, amount: event.target.value })}
+                          className={inputClass}
+                        />
+                      </Field>
+                      <Field id="ocr-detail-currency" label="Currency">
+                        <select
+                          id="ocr-detail-currency"
+                          value={form.currency}
+                          onChange={(event) => setForm({ ...form, currency: event.target.value })}
+                          className={inputClass}
+                        >
+                          {["GBP", "USD", "NGN", "EUR"].map((currency) => (
+                            <option key={currency} value={currency}>
+                              {currency}
+                            </option>
+                          ))}
+                        </select>
+                      </Field>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <Field id="ocr-detail-date" label="Date">
+                        <input
+                          id="ocr-detail-date"
+                          type="date"
+                          value={form.document_date}
+                          onChange={(event) => setForm({ ...form, document_date: event.target.value })}
+                          className={inputClass}
+                        />
+                      </Field>
+                      <Field id="ocr-detail-time" label="Time">
+                        <input
+                          id="ocr-detail-time"
+                          type="time"
+                          value={form.document_time}
+                          onChange={(event) => setForm({ ...form, document_time: event.target.value })}
+                          className={inputClass}
+                        />
+                      </Field>
+                    </div>
+                    <Field id="ocr-detail-reference" label="Reference">
+                      <input
+                        id="ocr-detail-reference"
+                        value={form.reference}
+                        onChange={(event) => setForm({ ...form, reference: event.target.value })}
+                        className={inputClass}
+                      />
+                    </Field>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <Field id="ocr-detail-recipient" label="Recipient">
+                        <input
+                          id="ocr-detail-recipient"
+                          value={form.recipient}
+                          onChange={(event) => setForm({ ...form, recipient: event.target.value })}
+                          className={inputClass}
+                        />
+                      </Field>
+                      <Field id="ocr-detail-sender" label="Sender">
+                        <input
+                          id="ocr-detail-sender"
+                          value={form.sender}
+                          onChange={(event) => setForm({ ...form, sender: event.target.value })}
+                          className={inputClass}
+                        />
+                      </Field>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button type="submit" disabled={busy} className={buttonPrimaryClass}>
+                        <Check className="h-4 w-4" aria-hidden="true" />
+                        Confirm
+                      </button>
+                      <button type="button" disabled={busy} onClick={() => void runAction("retry", "OCR result queued for retry.")} className={buttonSecondaryClass}>
+                        <RotateCw className="h-4 w-4" aria-hidden="true" />
+                        Retry
+                      </button>
+                      <button type="button" disabled={busy} onClick={() => void runAction("cancel", "OCR result cancelled.")} className={buttonSecondaryClass}>
+                        <XCircle className="h-4 w-4" aria-hidden="true" />
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </>
           ) : null}
         </section>
       </AppFrame>

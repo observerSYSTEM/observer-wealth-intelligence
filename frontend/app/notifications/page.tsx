@@ -6,6 +6,15 @@ import { FormEvent, useEffect, useState } from "react";
 import { AppFrame } from "@/components/app-frame";
 import { Field, FormMessage, inputClass } from "@/components/form-shell";
 import { ProtectedRoute } from "@/components/protected-route";
+import {
+  buttonPrimaryClass,
+  buttonSecondaryClass,
+  EmptyState,
+  MetricCard,
+  PageHeader,
+  Panel,
+  StatusBadge
+} from "@/components/wealth-ui";
 import { apiFetch, errorMessage } from "@/lib/api";
 import { statusLabel } from "@/lib/format";
 import type { Notification, NotificationList, NotificationPreference } from "@/types/finance";
@@ -116,167 +125,165 @@ export default function NotificationsPage() {
   return (
     <ProtectedRoute>
       <AppFrame>
-        <section className="space-y-4 py-6">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <div className="flex items-center gap-2">
-                <Bell className="h-5 w-5" aria-hidden="true" />
-                <h2 className="text-xl font-semibold">Notifications</h2>
-              </div>
-              <p className="mt-1 text-sm text-black/60 dark:text-white/60">
-                {unreadCount} requiring read
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => void markAllRead()}
-              className="inline-flex items-center gap-2 rounded-md border border-black/10 px-4 py-2.5 text-sm font-semibold dark:border-white/10"
-            >
-              <CheckCheck className="h-4 w-4" aria-hidden="true" />
-              Read all
-            </button>
-          </div>
+        <section className="space-y-5 py-5">
+          <PageHeader
+            eyebrow="Signals"
+            title="Notifications"
+            subtitle="In-app alerts, optional Telegram delivery, reminders, OCR, goals, and backup notices."
+            icon={<Bell className="h-5 w-5" aria-hidden="true" />}
+            actions={
+              <button type="button" onClick={() => void markAllRead()} className={buttonSecondaryClass}>
+                <CheckCheck className="h-4 w-4" aria-hidden="true" />
+                Read all
+              </button>
+            }
+          />
           <FormMessage tone="success">{message}</FormMessage>
           <FormMessage tone="error">{error}</FormMessage>
+
+          <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            <MetricCard label="Unread" value={String(unreadCount)} icon={<Bell className="h-5 w-5" />} tone={unreadCount > 0 ? "warning" : "neutral"} />
+            <MetricCard label="Total Loaded" value={String(notifications.length)} icon={<Bell className="h-5 w-5" />} />
+            <MetricCard label="Telegram" value={preferences?.telegram_enabled ? "On" : "Off"} icon={<Send className="h-5 w-5" />} />
+            <MetricCard label="Daily Reminder" value={preferences?.daily_reminder_enabled ? preferences.daily_reminder_time : "Off"} icon={<Bell className="h-5 w-5" />} />
+          </section>
+
           {preferences ? (
-            <form
-              onSubmit={(event) => void savePreferences(event)}
-              className="grid gap-4 rounded-lg border border-black/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/5 lg:grid-cols-[1fr_1fr_auto]"
-            >
-              <label className="flex items-center gap-3 text-sm font-medium">
-                <input
-                  type="checkbox"
-                  checked={preferences.telegram_enabled}
-                  onChange={(event) =>
-                    setPreferences({ ...preferences, telegram_enabled: event.target.checked })
-                  }
-                  className="h-4 w-4 accent-moss"
-                />
-                Telegram
-              </label>
-              <label className="flex items-center gap-3 text-sm font-medium">
-                <input
-                  type="checkbox"
-                  checked={preferences.daily_reminder_enabled}
-                  onChange={(event) =>
-                    setPreferences({
-                      ...preferences,
-                      daily_reminder_enabled: event.target.checked
-                    })
-                  }
-                  className="h-4 w-4 accent-moss"
-                />
-                Daily reminders
-              </label>
-              <Field id="daily-reminder-time" label="Reminder time">
-                <input
-                  id="daily-reminder-time"
-                  type="time"
-                  value={preferences.daily_reminder_time}
-                  onChange={(event) =>
-                    setPreferences({ ...preferences, daily_reminder_time: event.target.value })
-                  }
-                  className={inputClass}
-                />
-              </Field>
-              <label className="flex items-center gap-3 text-sm font-medium">
-                <input
-                  type="checkbox"
-                  checked={preferences.goal_alerts_enabled}
-                  onChange={(event) =>
-                    setPreferences({ ...preferences, goal_alerts_enabled: event.target.checked })
-                  }
-                  className="h-4 w-4 accent-moss"
-                />
-                Goal alerts
-              </label>
-              <label className="flex items-center gap-3 text-sm font-medium">
-                <input
-                  type="checkbox"
-                  checked={preferences.ocr_alerts_enabled}
-                  onChange={(event) =>
-                    setPreferences({ ...preferences, ocr_alerts_enabled: event.target.checked })
-                  }
-                  className="h-4 w-4 accent-moss"
-                />
-                OCR alerts
-              </label>
-              <label className="flex items-center gap-3 text-sm font-medium">
-                <input
-                  type="checkbox"
-                  checked={preferences.backup_alerts_enabled}
-                  onChange={(event) =>
-                    setPreferences({ ...preferences, backup_alerts_enabled: event.target.checked })
-                  }
-                  className="h-4 w-4 accent-moss"
-                />
-                Backup alerts
-              </label>
-              <div className="flex flex-wrap gap-2 lg:col-span-3">
-                <button
-                  type="submit"
-                  className="rounded-md bg-moss px-4 py-2.5 text-sm font-semibold text-white"
-                >
-                  Save
-                </button>
-                <button
-                  type="button"
-                  onClick={() => void testTelegram()}
-                  className="inline-flex items-center gap-2 rounded-md border border-black/10 px-4 py-2.5 text-sm font-semibold dark:border-white/10"
-                >
-                  <Send className="h-4 w-4" aria-hidden="true" />
-                  Test Telegram
-                </button>
-              </div>
-            </form>
-          ) : null}
-          <div className="space-y-3">
-            {notifications.map((notification) => (
-              <article
-                key={notification.id}
-                className="rounded-lg border border-black/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/5"
-              >
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h3 className="font-semibold">{notification.title}</h3>
-                    <p className="mt-2 text-sm text-black/70 dark:text-white/70">
-                      {notification.message}
-                    </p>
-                  </div>
-                  <span className="rounded-md bg-mist px-2 py-1 text-xs font-semibold text-ink dark:bg-white/10 dark:text-white">
-                    {statusLabel(notification.status)}
-                  </span>
+            <Panel title="Preferences" icon={<Bell className="h-5 w-5" aria-hidden="true" />}>
+              <form onSubmit={(event) => void savePreferences(event)} className="space-y-4">
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                  <Toggle
+                    label="Telegram"
+                    checked={preferences.telegram_enabled}
+                    onChange={(checked) => setPreferences({ ...preferences, telegram_enabled: checked })}
+                  />
+                  <Toggle
+                    label="Daily reminders"
+                    checked={preferences.daily_reminder_enabled}
+                    onChange={(checked) => setPreferences({ ...preferences, daily_reminder_enabled: checked })}
+                  />
+                  <Toggle
+                    label="Weekly summary"
+                    checked={preferences.weekly_summary_enabled}
+                    onChange={(checked) => setPreferences({ ...preferences, weekly_summary_enabled: checked })}
+                  />
+                  <Toggle
+                    label="Goal alerts"
+                    checked={preferences.goal_alerts_enabled}
+                    onChange={(checked) => setPreferences({ ...preferences, goal_alerts_enabled: checked })}
+                  />
+                  <Toggle
+                    label="OCR alerts"
+                    checked={preferences.ocr_alerts_enabled}
+                    onChange={(checked) => setPreferences({ ...preferences, ocr_alerts_enabled: checked })}
+                  />
+                  <Toggle
+                    label="Backup alerts"
+                    checked={preferences.backup_alerts_enabled}
+                    onChange={(checked) => setPreferences({ ...preferences, backup_alerts_enabled: checked })}
+                  />
                 </div>
-                <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-black/60 dark:text-white/60">
-                  <span>
-                    {statusLabel(notification.type)} / {statusLabel(notification.channel)}
-                  </span>
-                  <span>{new Date(notification.created_at).toLocaleString("en-GB")}</span>
+                <div className="grid gap-3 md:grid-cols-3">
+                  <Field id="daily-reminder-time" label="Reminder time">
+                    <input
+                      id="daily-reminder-time"
+                      type="time"
+                      value={preferences.daily_reminder_time}
+                      onChange={(event) => setPreferences({ ...preferences, daily_reminder_time: event.target.value })}
+                      className={inputClass}
+                    />
+                  </Field>
+                  <Field id="quiet-start" label="Quiet start">
+                    <input
+                      id="quiet-start"
+                      type="time"
+                      value={preferences.quiet_hours_start ?? ""}
+                      onChange={(event) => setPreferences({ ...preferences, quiet_hours_start: event.target.value || null })}
+                      className={inputClass}
+                    />
+                  </Field>
+                  <Field id="quiet-end" label="Quiet end">
+                    <input
+                      id="quiet-end"
+                      type="time"
+                      value={preferences.quiet_hours_end ?? ""}
+                      onChange={(event) => setPreferences({ ...preferences, quiet_hours_end: event.target.value || null })}
+                      className={inputClass}
+                    />
+                  </Field>
                 </div>
-                {notification.failure_reason ? (
-                  <p className="mt-3 rounded-md border border-copper/30 bg-copper/10 p-3 text-sm text-copper dark:text-[#ffb088]">
-                    {notification.failure_reason}
-                  </p>
-                ) : null}
-                {notification.status !== "read" && notification.channel === "in_app" ? (
-                  <button
-                    type="button"
-                    onClick={() => void markRead(notification.id)}
-                    className="mt-4 rounded-md border border-black/10 px-3 py-2 text-sm font-semibold dark:border-white/10"
-                  >
-                    Mark read
+                <div className="flex flex-wrap gap-2">
+                  <button type="submit" className={buttonPrimaryClass}>Save</button>
+                  <button type="button" onClick={() => void testTelegram()} className={buttonSecondaryClass}>
+                    <Send className="h-4 w-4" aria-hidden="true" />
+                    Test Telegram
                   </button>
-                ) : null}
-              </article>
-            ))}
-            {!notifications.length ? (
-              <div className="rounded-lg border border-dashed border-black/15 p-5 text-sm text-black/60 dark:border-white/15 dark:text-white/60">
-                No notifications yet.
-              </div>
-            ) : null}
-          </div>
+                </div>
+              </form>
+            </Panel>
+          ) : null}
+
+          <Panel title="Inbox" icon={<Bell className="h-5 w-5" aria-hidden="true" />}>
+            <div className="space-y-3">
+              {notifications.map((notification) => (
+                <article
+                  key={notification.id}
+                  className="rounded-lg border border-[color:var(--owi-border)] bg-[color:var(--owi-surface-muted)] p-4"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <h2 className="font-semibold">{notification.title}</h2>
+                      <p className="mt-2 text-sm leading-6 text-[color:var(--owi-muted)]">{notification.message}</p>
+                    </div>
+                    <StatusBadge status={notification.status} />
+                  </div>
+                  <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-[color:var(--owi-muted)]">
+                    <span>{statusLabel(notification.type)} / {statusLabel(notification.channel)} / {statusLabel(notification.severity)}</span>
+                    <span>{new Date(notification.created_at).toLocaleString("en-GB")}</span>
+                  </div>
+                  {notification.failure_reason ? (
+                    <p className="mt-3 rounded-md border border-copper/30 bg-copper/10 p-3 text-sm text-copper dark:text-[#ffb088]">
+                      {notification.failure_reason}
+                    </p>
+                  ) : null}
+                  {notification.status !== "read" && notification.channel === "in_app" ? (
+                    <button
+                      type="button"
+                      onClick={() => void markRead(notification.id)}
+                      className={`${buttonSecondaryClass} mt-4`}
+                    >
+                      Mark read
+                    </button>
+                  ) : null}
+                </article>
+              ))}
+              {!notifications.length ? <EmptyState title="No notifications yet" /> : null}
+            </div>
+          </Panel>
         </section>
       </AppFrame>
     </ProtectedRoute>
+  );
+}
+
+function Toggle({
+  label,
+  checked,
+  onChange
+}: {
+  label: string;
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}) {
+  return (
+    <label className="flex min-h-12 items-center justify-between gap-3 rounded-md border border-[color:var(--owi-border)] bg-[color:var(--owi-surface-muted)] px-3 py-2 text-sm font-semibold">
+      <span>{label}</span>
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(event) => onChange(event.target.checked)}
+        className="h-4 w-4 accent-moss"
+      />
+    </label>
   );
 }

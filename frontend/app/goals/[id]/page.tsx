@@ -7,8 +7,19 @@ import { FormEvent, useEffect, useState } from "react";
 import { AppFrame } from "@/components/app-frame";
 import { Field, FormMessage, inputClass } from "@/components/form-shell";
 import { ProtectedRoute } from "@/components/protected-route";
+import {
+  buttonPrimaryClass,
+  buttonSecondaryClass,
+  ConfirmDialog,
+  EmptyState,
+  GoalProgress,
+  MetricCard,
+  PageHeader,
+  Panel,
+  StatusBadge
+} from "@/components/wealth-ui";
 import { apiFetch, errorMessage } from "@/lib/api";
-import { formatMoney, formatPercent, statusLabel } from "@/lib/format";
+import { formatMoney, statusLabel } from "@/lib/format";
 import type { Goal, GoalContribution } from "@/types/finance";
 
 type ContributionList = {
@@ -22,6 +33,8 @@ export default function GoalDetailPage() {
   const [goal, setGoal] = useState<Goal | null>(null);
   const [contributions, setContributions] = useState<GoalContribution[]>([]);
   const [form, setForm] = useState({ amount: "", contribution_date: "", notes: "" });
+  const [deleteContributionId, setDeleteContributionId] = useState<string | null>(null);
+  const [archiveOpen, setArchiveOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -83,13 +96,14 @@ export default function GoalDetailPage() {
     }
   }
 
-  async function deleteContribution(contributionId: string) {
-    if (!goal) return;
+  async function deleteContribution() {
+    if (!goal || !deleteContributionId) return;
     setError(null);
     try {
-      await apiFetch(`/api/v1/goals/${goal.id}/contributions/${contributionId}`, {
+      await apiFetch(`/api/v1/goals/${goal.id}/contributions/${deleteContributionId}`, {
         method: "DELETE"
       });
+      setDeleteContributionId(null);
       await loadGoal();
     } catch (deleteError) {
       setError(errorMessage(deleteError));
@@ -97,7 +111,7 @@ export default function GoalDetailPage() {
   }
 
   async function archiveGoal() {
-    if (!goal || !window.confirm("Archive this goal?")) return;
+    if (!goal) return;
     setError(null);
     try {
       await apiFetch(`/api/v1/goals/${goal.id}`, { method: "DELETE" });
@@ -110,133 +124,143 @@ export default function GoalDetailPage() {
   return (
     <ProtectedRoute>
       <AppFrame>
-        <section className="space-y-4 py-6">
+        <section className="space-y-5 py-5">
           <FormMessage tone="success">{message}</FormMessage>
           <FormMessage tone="error">{error}</FormMessage>
           {goal ? (
             <>
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="flex items-start gap-3">
-                  <span className="grid h-10 w-10 place-items-center rounded-md bg-mist text-ink dark:bg-white/10 dark:text-white">
-                    <Target className="h-5 w-5" aria-hidden="true" />
-                  </span>
-                  <div>
-                    <h2 className="text-xl font-semibold">{goal.name}</h2>
-                    <p className="mt-1 text-sm text-black/60 dark:text-white/60">
-                      {statusLabel(goal.category)} / {statusLabel(goal.status)}
-                      {goal.is_primary ? " / Primary" : ""}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => void archiveGoal()}
-                  className="inline-flex items-center gap-2 rounded-md border border-black/10 px-3 py-2 text-sm font-semibold dark:border-white/10"
-                >
-                  <Archive className="h-4 w-4" aria-hidden="true" />
-                  Archive
-                </button>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <Metric label="Current" value={formatMoney(goal.current_amount, goal.currency)} />
-                <Metric label="Target" value={formatMoney(goal.target_amount, goal.currency)} />
-                <Metric label="Remaining" value={formatMoney(goal.remaining_amount, goal.currency)} />
-                <Metric label="Progress" value={formatPercent(goal.progress_percentage)} />
-              </div>
-
-              <div className="rounded-lg border border-black/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/5">
-                <h3 className="font-semibold">Contribution History</h3>
-                <form onSubmit={(event) => void addContribution(event)} className="mt-4 grid gap-3 md:grid-cols-[1fr_1fr_2fr_auto]">
-                  <Field id="goal-detail-amount" label="Amount">
-                    <input
-                      id="goal-detail-amount"
-                      required
-                      type="number"
-                      min="0.01"
-                      step="0.01"
-                      value={form.amount}
-                      onChange={(event) => setForm({ ...form, amount: event.target.value })}
-                      className={inputClass}
-                    />
-                  </Field>
-                  <Field id="goal-detail-date" label="Date">
-                    <input
-                      id="goal-detail-date"
-                      type="date"
-                      value={form.contribution_date}
-                      onChange={(event) =>
-                        setForm({ ...form, contribution_date: event.target.value })
-                      }
-                      className={inputClass}
-                    />
-                  </Field>
-                  <Field id="goal-detail-notes" label="Notes">
-                    <input
-                      id="goal-detail-notes"
-                      value={form.notes}
-                      onChange={(event) => setForm({ ...form, notes: event.target.value })}
-                      className={inputClass}
-                    />
-                  </Field>
-                  <button
-                    type="submit"
-                    disabled={busy}
-                    className="inline-flex items-center justify-center gap-2 self-end rounded-md bg-moss px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
-                  >
-                    <Plus className="h-4 w-4" aria-hidden="true" />
-                    Add
+              <PageHeader
+                eyebrow={statusLabel(goal.category)}
+                title={goal.name}
+                subtitle={`${statusLabel(goal.progress_source)} / ${statusLabel(goal.status)}`}
+                icon={<Target className="h-5 w-5" aria-hidden="true" />}
+                actions={
+                  <button type="button" onClick={() => setArchiveOpen(true)} className={buttonSecondaryClass}>
+                    <Archive className="h-4 w-4" aria-hidden="true" />
+                    Archive
                   </button>
-                </form>
-                <div className="mt-4 space-y-2">
-                  {contributions.map((contribution) => (
-                    <div
-                      key={contribution.id}
-                      className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-black/10 p-3 text-sm dark:border-white/10"
-                    >
-                      <div>
-                        <span className="font-medium">
-                          {formatMoney(contribution.amount, contribution.currency)}
-                        </span>
-                        <span className="ml-2 text-black/60 dark:text-white/60">
-                          {contribution.contribution_date}
-                        </span>
-                        {contribution.notes ? (
-                          <span className="ml-2 text-black/60 dark:text-white/60">
-                            {contribution.notes}
-                          </span>
-                        ) : null}
+                }
+              />
+
+              <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                <MetricCard label="Current" value={formatMoney(goal.current_amount, goal.currency)} />
+                <MetricCard label="Target" value={formatMoney(goal.target_amount, goal.currency)} />
+                <MetricCard label="Remaining" value={formatMoney(goal.remaining_amount, goal.currency)} />
+                <MetricCard label="Monthly Estimate" value={goal.estimated_monthly_contribution ? formatMoney(goal.estimated_monthly_contribution, goal.currency) : "None"} />
+              </section>
+
+              <div className="grid gap-5 xl:grid-cols-[0.82fr_1.18fr]">
+                <div className="space-y-5">
+                  <Panel
+                    title="Progress"
+                    icon={<Target className="h-5 w-5" aria-hidden="true" />}
+                    actions={
+                      <div className="flex gap-2">
+                        {goal.is_primary ? <StatusBadge status="primary" tone="info" /> : null}
+                        <StatusBadge status={goal.status} />
                       </div>
-                      <button
-                        type="button"
-                        title="Delete contribution"
-                        onClick={() => void deleteContribution(contribution.id)}
-                        className="grid h-8 w-8 place-items-center rounded-md border border-black/10 hover:bg-mist dark:border-white/10 dark:hover:bg-white/10"
-                      >
-                        <Trash2 className="h-4 w-4" aria-hidden="true" />
+                    }
+                  >
+                    <GoalProgress goal={goal} />
+                    {goal.notes ? (
+                      <p className="mt-5 rounded-md border border-[color:var(--owi-border)] bg-[color:var(--owi-surface-muted)] p-3 text-sm leading-6 text-[color:var(--owi-muted)]">
+                        {goal.notes}
+                      </p>
+                    ) : null}
+                  </Panel>
+
+                  <Panel title="Add Contribution" icon={<Plus className="h-5 w-5" aria-hidden="true" />}>
+                    <form onSubmit={(event) => void addContribution(event)} className="space-y-4">
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <Field id="goal-detail-amount" label="Amount">
+                          <input
+                            id="goal-detail-amount"
+                            required
+                            type="number"
+                            min="0.01"
+                            step="0.01"
+                            value={form.amount}
+                            onChange={(event) => setForm({ ...form, amount: event.target.value })}
+                            className={inputClass}
+                          />
+                        </Field>
+                        <Field id="goal-detail-date" label="Date">
+                          <input
+                            id="goal-detail-date"
+                            type="date"
+                            value={form.contribution_date}
+                            onChange={(event) => setForm({ ...form, contribution_date: event.target.value })}
+                            className={inputClass}
+                          />
+                        </Field>
+                      </div>
+                      <Field id="goal-detail-notes" label="Notes">
+                        <input
+                          id="goal-detail-notes"
+                          value={form.notes}
+                          onChange={(event) => setForm({ ...form, notes: event.target.value })}
+                          className={inputClass}
+                        />
+                      </Field>
+                      <button type="submit" disabled={busy} className={buttonPrimaryClass}>
+                        <Plus className="h-4 w-4" aria-hidden="true" />
+                        Add
                       </button>
-                    </div>
-                  ))}
-                  {!contributions.length ? (
-                    <p className="rounded-md border border-dashed border-black/15 p-4 text-sm text-black/60 dark:border-white/15 dark:text-white/60">
-                      No contributions yet.
-                    </p>
-                  ) : null}
+                    </form>
+                  </Panel>
                 </div>
+
+                <Panel title="Contribution History">
+                  <div className="space-y-3">
+                    {contributions.map((contribution) => (
+                      <article
+                        key={contribution.id}
+                        className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-[color:var(--owi-border)] bg-[color:var(--owi-surface-muted)] p-3 text-sm"
+                      >
+                        <div className="min-w-0">
+                          <p className="font-semibold">{formatMoney(contribution.amount, contribution.currency)}</p>
+                          <p className="mt-1 text-[color:var(--owi-muted)]">
+                            {contribution.contribution_date} / {statusLabel(contribution.source_type)}
+                          </p>
+                          {contribution.notes ? (
+                            <p className="mt-1 text-[color:var(--owi-muted)]">{contribution.notes}</p>
+                          ) : null}
+                        </div>
+                        <button
+                          type="button"
+                          title="Delete contribution"
+                          onClick={() => setDeleteContributionId(contribution.id)}
+                          className={buttonSecondaryClass}
+                        >
+                          <Trash2 className="h-4 w-4" aria-hidden="true" />
+                        </button>
+                      </article>
+                    ))}
+                    {!contributions.length ? <EmptyState title="No contributions yet" /> : null}
+                  </div>
+                </Panel>
               </div>
+
+              <ConfirmDialog
+                open={archiveOpen}
+                title="Archive goal"
+                message="This removes the goal from the active goal list."
+                confirmLabel="Archive"
+                onConfirm={() => void archiveGoal()}
+                onCancel={() => setArchiveOpen(false)}
+              />
+              <ConfirmDialog
+                open={deleteContributionId !== null}
+                title="Delete contribution"
+                message="This removes the contribution from this goal history."
+                confirmLabel="Delete"
+                onConfirm={() => void deleteContribution()}
+                onCancel={() => setDeleteContributionId(null)}
+              />
             </>
           ) : null}
         </section>
       </AppFrame>
     </ProtectedRoute>
-  );
-}
-
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border border-black/10 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-white/5">
-      <p className="text-sm text-black/60 dark:text-white/60">{label}</p>
-      <p className="mt-1 text-xl font-semibold">{value}</p>
-    </div>
   );
 }

@@ -1,12 +1,23 @@
 "use client";
 
-import { Download, Eye, ScanText, Trash2, Upload } from "lucide-react";
+import { Download, Eye, ReceiptText, ScanText, Trash2, Upload } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { AppFrame } from "@/components/app-frame";
-import { Field, FormMessage, inputClass } from "@/components/form-shell";
+import { FormMessage } from "@/components/form-shell";
 import { ProtectedRoute } from "@/components/protected-route";
+import {
+  buttonPrimaryClass,
+  buttonSecondaryClass,
+  ConfirmDialog,
+  EmptyState,
+  FileUploader,
+  MetricCard,
+  PageHeader,
+  Panel,
+  StatusBadge
+} from "@/components/wealth-ui";
 import { apiBaseUrl, apiBlob, apiFetch, errorMessage } from "@/lib/api";
 import { formatFileSize } from "@/lib/format";
 import type { OCRResult, Receipt, ReceiptList } from "@/types/finance";
@@ -20,6 +31,7 @@ export default function ReceiptsPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [ocrProcessingId, setOcrProcessingId] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   async function loadReceipts() {
     const data = await apiFetch<ReceiptList>("/api/v1/receipts");
@@ -79,10 +91,16 @@ export default function ReceiptsPage() {
     }
   }
 
-  async function deleteReceipt(receiptId: string) {
-    if (!window.confirm("Delete this receipt?")) return;
-    await apiFetch(`/api/v1/receipts/${receiptId}`, { method: "DELETE" });
-    setReceipts((current) => current.filter((receipt) => receipt.id !== receiptId));
+  async function deleteReceipt() {
+    if (!deleteId) return;
+    setError(null);
+    try {
+      await apiFetch(`/api/v1/receipts/${deleteId}`, { method: "DELETE" });
+      setReceipts((current) => current.filter((receipt) => receipt.id !== deleteId));
+      setDeleteId(null);
+    } catch (deleteError) {
+      setError(errorMessage(deleteError));
+    }
   }
 
   async function runReceiptOCR(receipt: Receipt) {
@@ -105,122 +123,143 @@ export default function ReceiptsPage() {
   return (
     <ProtectedRoute>
       <AppFrame>
-        <section className="grid gap-4 py-6 lg:grid-cols-[0.8fr_1.2fr]">
-          <div className="space-y-4">
-            <div className="rounded-lg border border-black/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/5">
-              <h2 className="text-lg font-semibold">Receipt Vault</h2>
-              <p className="mt-1 text-sm text-black/60 dark:text-white/60">
-                JPEG, PNG, WebP and PDF files are supported.
-              </p>
-              <div className="mt-5 space-y-4">
-                <FormMessage tone="success">{message}</FormMessage>
-                <FormMessage tone="error">{error}</FormMessage>
-                <Field id="receipt-upload" label="Upload receipt">
-                  <input
-                    id="receipt-upload"
-                    type="file"
-                    accept="image/jpeg,image/png,image/webp,application/pdf"
-                    onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-                    className={inputClass}
-                  />
-                </Field>
+        <section className="space-y-5 py-5">
+          <PageHeader
+            eyebrow="Document intake"
+            title="Receipt Vault"
+            subtitle="Upload receipts, preview originals, and queue OCR for manual review."
+            icon={<ReceiptText className="h-5 w-5" aria-hidden="true" />}
+          />
+          <FormMessage tone="success">{message}</FormMessage>
+          <FormMessage tone="error">{error}</FormMessage>
+
+          <div className="grid gap-5 xl:grid-cols-[0.78fr_1.22fr]">
+            <div className="space-y-5">
+              <Panel title="Upload Receipt" icon={<Upload className="h-5 w-5" aria-hidden="true" />}>
+                <FileUploader
+                  id="receipt-upload"
+                  label="Select or drop receipt"
+                  accept="image/jpeg,image/png,image/webp,application/pdf"
+                  file={file}
+                  onFileChange={setFile}
+                  helper="PNG, JPEG, WebP or PDF"
+                  disabled={uploading}
+                />
+                {uploading ? (
+                  <div className="mt-4 h-2 overflow-hidden rounded-full bg-[color:var(--owi-surface-elevated)]">
+                    <div className="h-full w-2/3 animate-pulse rounded-full bg-moss dark:bg-mist" />
+                  </div>
+                ) : null}
                 <button
                   type="button"
                   disabled={!file || uploading}
                   onClick={() => void uploadReceipt()}
-                  className="inline-flex items-center gap-2 rounded-md bg-moss px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-60"
+                  className={`${buttonPrimaryClass} mt-4`}
                 >
                   <Upload className="h-4 w-4" aria-hidden="true" />
                   {uploading ? "Uploading" : "Upload"}
                 </button>
-              </div>
+              </Panel>
+
+              <Panel title="Receipt Status">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <MetricCard label="Stored Receipts" value={String(receipts.length)} />
+                  <MetricCard label="OCR Running" value={ocrProcessingId ? "1" : "0"} />
+                </div>
+              </Panel>
+
+              {previewUrl ? (
+                <Panel title="Preview" icon={<Eye className="h-5 w-5" aria-hidden="true" />}>
+                  {previewType === "application/pdf" ? (
+                    <iframe title="Receipt preview" src={previewUrl} className="h-96 w-full rounded-md border border-[color:var(--owi-border)]" />
+                  ) : (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img alt="Receipt preview" src={previewUrl} className="max-h-96 w-full rounded-md object-contain" />
+                  )}
+                </Panel>
+              ) : null}
             </div>
 
-            {previewUrl ? (
-              <div className="rounded-lg border border-black/10 bg-white p-5 shadow-sm dark:border-white/10 dark:bg-white/5">
-                <h3 className="text-lg font-semibold">Preview</h3>
-                {previewType === "application/pdf" ? (
-                  <iframe title="Receipt preview" src={previewUrl} className="mt-4 h-96 w-full rounded-md" />
-                ) : (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img alt="Receipt preview" src={previewUrl} className="mt-4 max-h-96 rounded-md object-contain" />
-                )}
+            <Panel title="Stored Receipts" icon={<ReceiptText className="h-5 w-5" aria-hidden="true" />}>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {receipts.map((receipt) => (
+                  <article
+                    key={receipt.id}
+                    className="rounded-lg border border-[color:var(--owi-border)] bg-[color:var(--owi-surface-muted)] p-4"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h3 className="truncate font-semibold">{receipt.original_filename}</h3>
+                        <p className="mt-1 text-sm text-[color:var(--owi-muted)]">
+                          {formatFileSize(receipt.file_size)}
+                        </p>
+                      </div>
+                      <StatusBadge status={receipt.media_type.split("/")[1] ?? "file"} />
+                    </div>
+                    <div className="mt-3 space-y-1 text-sm text-[color:var(--owi-muted)]">
+                      <p>Uploaded {new Date(receipt.uploaded_at).toLocaleString("en-GB")}</p>
+                      <p>
+                        Linked entry:{" "}
+                        {receipt.linked_entry_id ? (
+                          <Link className="font-semibold text-moss dark:text-mist" href={`/entries/${receipt.linked_entry_id}`}>
+                            Open
+                          </Link>
+                        ) : (
+                          "None"
+                        )}
+                      </p>
+                    </div>
+                    <div className="mt-4 flex flex-wrap items-center gap-2">
+                      <button
+                        type="button"
+                        title="Preview"
+                        onClick={() => void previewReceipt(receipt)}
+                        className={buttonSecondaryClass}
+                      >
+                        <Eye className="h-4 w-4" aria-hidden="true" />
+                      </button>
+                      <a
+                        title="Download"
+                        href={`${apiBaseUrl}/api/v1/receipts/${receipt.id}/content`}
+                        className={buttonSecondaryClass}
+                      >
+                        <Download className="h-4 w-4" aria-hidden="true" />
+                      </a>
+                      <button
+                        type="button"
+                        title="Run OCR"
+                        disabled={ocrProcessingId === receipt.id}
+                        onClick={() => void runReceiptOCR(receipt)}
+                        className={buttonSecondaryClass}
+                      >
+                        <ScanText className="h-4 w-4" aria-hidden="true" />
+                      </button>
+                      <button
+                        type="button"
+                        title="Delete"
+                        onClick={() => setDeleteId(receipt.id)}
+                        className={buttonSecondaryClass}
+                      >
+                        <Trash2 className="h-4 w-4" aria-hidden="true" />
+                      </button>
+                    </div>
+                  </article>
+                ))}
+                {!receipts.length ? (
+                  <EmptyState title="No receipts uploaded" message="Upload a receipt to begin OCR review." />
+                ) : null}
               </div>
-            ) : null}
+            </Panel>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            {receipts.map((receipt) => (
-              <article
-                key={receipt.id}
-                className="rounded-lg border border-black/10 bg-white p-4 shadow-sm dark:border-white/10 dark:bg-white/5"
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <h3 className="truncate font-semibold">{receipt.original_filename}</h3>
-                    <p className="mt-1 text-sm text-black/60 dark:text-white/60">
-                      {formatFileSize(receipt.file_size)}
-                    </p>
-                  </div>
-                  <span className="rounded-md bg-mist px-2 py-1 text-xs font-semibold text-ink dark:bg-white/10 dark:text-white">
-                    {receipt.media_type.split("/")[1]?.toUpperCase()}
-                  </span>
-                </div>
-                <div className="mt-3 space-y-1 text-sm text-black/60 dark:text-white/60">
-                  <p>Uploaded {new Date(receipt.uploaded_at).toLocaleString("en-GB")}</p>
-                  <p>
-                    Linked entry:{" "}
-                    {receipt.linked_entry_id ? (
-                      <Link className="font-medium text-moss dark:text-mist" href={`/entries/${receipt.linked_entry_id}`}>
-                        Open
-                      </Link>
-                    ) : (
-                      "None"
-                    )}
-                  </p>
-                </div>
-                <div className="mt-4 flex items-center gap-2">
-                  <button
-                    type="button"
-                    title="Preview"
-                    onClick={() => void previewReceipt(receipt)}
-                    className="grid h-9 w-9 place-items-center rounded-md border border-black/10 hover:bg-mist dark:border-white/10 dark:hover:bg-white/10"
-                  >
-                    <Eye className="h-4 w-4" aria-hidden="true" />
-                  </button>
-                  <a
-                    title="Download"
-                    href={`${apiBaseUrl}/api/v1/receipts/${receipt.id}/content`}
-                    className="grid h-9 w-9 place-items-center rounded-md border border-black/10 hover:bg-mist dark:border-white/10 dark:hover:bg-white/10"
-                  >
-                    <Download className="h-4 w-4" aria-hidden="true" />
-                  </a>
-                  <button
-                    type="button"
-                    title="Delete"
-                    onClick={() => void deleteReceipt(receipt.id)}
-                    className="grid h-9 w-9 place-items-center rounded-md border border-black/10 hover:bg-mist dark:border-white/10 dark:hover:bg-white/10"
-                  >
-                    <Trash2 className="h-4 w-4" aria-hidden="true" />
-                  </button>
-                  <button
-                    type="button"
-                    title="Run OCR"
-                    disabled={ocrProcessingId === receipt.id}
-                    onClick={() => void runReceiptOCR(receipt)}
-                    className="grid h-9 w-9 place-items-center rounded-md border border-black/10 hover:bg-mist disabled:opacity-60 dark:border-white/10 dark:hover:bg-white/10"
-                  >
-                    <ScanText className="h-4 w-4" aria-hidden="true" />
-                  </button>
-                </div>
-              </article>
-            ))}
-            {!receipts.length ? (
-              <div className="rounded-lg border border-dashed border-black/15 p-5 text-sm text-black/60 dark:border-white/15 dark:text-white/60">
-                No receipts uploaded yet.
-              </div>
-            ) : null}
-          </div>
+          <ConfirmDialog
+            open={deleteId !== null}
+            title="Delete receipt"
+            message="This removes the stored receipt record and its private file."
+            confirmLabel="Delete"
+            onConfirm={() => void deleteReceipt()}
+            onCancel={() => setDeleteId(null)}
+          />
         </section>
       </AppFrame>
     </ProtectedRoute>
