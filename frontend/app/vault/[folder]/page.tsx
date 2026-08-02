@@ -20,7 +20,7 @@ import {
   SearchInput,
   StatusBadge
 } from "@/components/wealth-ui";
-import { apiBlob, apiFetch, apiUrl, errorMessage } from "@/lib/api";
+import { apiBlob, apiFetch, apiUrl, contextualErrorMessage, errorMessage } from "@/lib/api";
 import { formatFileSize, statusLabel } from "@/lib/format";
 import type { OCRResult, VaultDocument, VaultDocumentList } from "@/types/finance";
 
@@ -86,7 +86,7 @@ export default function VaultFolderPage() {
       setMessage("Document uploaded.");
       await loadDocuments();
     } catch (uploadError) {
-      setError(errorMessage(uploadError));
+      setError(contextualErrorMessage(uploadError, "upload"));
     } finally {
       setBusy(false);
     }
@@ -128,7 +128,7 @@ export default function VaultFolderPage() {
       setOcrResult(result);
       setMessage("OCR job queued.");
     } catch (ocrError) {
-      setError(errorMessage(ocrError));
+      setError(contextualErrorMessage(ocrError, "ocr"));
     } finally {
       setBusy(false);
     }

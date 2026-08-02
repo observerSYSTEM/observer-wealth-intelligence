@@ -9,7 +9,7 @@ import { Field, FormMessage, inputClass } from "@/components/form-shell";
 import { PasswordInput } from "@/components/password-input";
 import { RouteLoading } from "@/components/protected-route";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { errorMessage } from "@/lib/api";
+import { contextualErrorMessage } from "@/lib/api";
 
 export default function SetupPage() {
   const router = useRouter();
@@ -55,7 +55,7 @@ export default function SetupPage() {
       });
       router.replace("/");
     } catch (error) {
-      setMessage(errorMessage(error));
+      setMessage(contextualErrorMessage(error, "form"));
     } finally {
       setSubmitting(false);
     }

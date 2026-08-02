@@ -15,7 +15,7 @@ import {
   OCRReviewPanel,
   PageHeader
 } from "@/components/wealth-ui";
-import { apiFetch, errorMessage } from "@/lib/api";
+import { apiFetch, contextualErrorMessage, errorMessage } from "@/lib/api";
 import type { OCRResult, OCRResultList } from "@/types/finance";
 
 type ReviewState = {
@@ -136,7 +136,7 @@ function ReviewCard({
       });
       onSaved("OCR result confirmed.");
     } catch (saveError) {
-      onError(errorMessage(saveError));
+      onError(contextualErrorMessage(saveError, "ocr"));
     } finally {
       setSaving(false);
     }
@@ -151,7 +151,7 @@ function ReviewCard({
       });
       onSaved("OCR result cancelled.");
     } catch (cancelError) {
-      onError(errorMessage(cancelError));
+      onError(contextualErrorMessage(cancelError, "ocr"));
     } finally {
       setSaving(false);
     }
@@ -166,7 +166,7 @@ function ReviewCard({
       });
       onSaved("OCR result queued for retry.");
     } catch (retryError) {
-      onError(errorMessage(retryError));
+      onError(contextualErrorMessage(retryError, "ocr"));
     } finally {
       setSaving(false);
     }

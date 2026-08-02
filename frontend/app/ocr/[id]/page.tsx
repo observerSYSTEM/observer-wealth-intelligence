@@ -15,7 +15,7 @@ import {
   PageHeader,
   StatusBadge
 } from "@/components/wealth-ui";
-import { apiFetch, errorMessage } from "@/lib/api";
+import { apiFetch, contextualErrorMessage, errorMessage } from "@/lib/api";
 import { formatMoney, formatPercent, statusLabel } from "@/lib/format";
 import type { OCRResult } from "@/types/finance";
 
@@ -100,7 +100,7 @@ export default function OCRResultPage() {
       setResult(updated);
       setMessage("OCR result confirmed.");
     } catch (confirmError) {
-      setError(errorMessage(confirmError));
+      setError(contextualErrorMessage(confirmError, "ocr"));
     } finally {
       setBusy(false);
     }
@@ -122,7 +122,7 @@ export default function OCRResultPage() {
         await loadResult();
       }
     } catch (actionError) {
-      setError(errorMessage(actionError));
+      setError(contextualErrorMessage(actionError, "ocr"));
     } finally {
       setBusy(false);
     }

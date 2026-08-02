@@ -62,6 +62,8 @@ type ApiFetchOptions = {
   retryOnUnauthorized?: boolean;
 };
 
+type ErrorContext = "auth" | "form" | "upload" | "ocr" | "backup";
+
 type CachedPayload<T> = {
   storedAt: string;
   value: T;
@@ -249,5 +251,44 @@ export async function apiBlob(path: string): Promise<Blob> {
 }
 
 export function errorMessage(error: unknown) {
-  return error instanceof ApiError ? error.detail : "Something went wrong.";
+  if (!(error instanceof ApiError)) return "Something went wrong. Please try again.";
+
+  const detail = error.detail || "Request failed.";
+  if (error.status === 0) {
+    return "OWI cannot reach the API. Check the Raspberry Pi service and network connection, then try again.";
+  }
+  if (error.status === 401) {
+    return detail === "Invalid email or password"
+      ? detail
+      : "Your session has expired. Please sign in again.";
+  }
+  if (error.status === 403) {
+    return "You do not have permission to complete this action.";
+  }
+  if (error.status === 413) {
+    return "The selected file is too large for the configured upload limit.";
+  }
+  if (error.status === 422) {
+    return "Some fields need attention. Check the form values and try again.";
+  }
+  if (error.status >= 500) {
+    return "OWI hit a server error. Check diagnostics or logs, then try again.";
+  }
+  return detail;
+}
+
+export function contextualErrorMessage(error: unknown, context: ErrorContext) {
+  const message = errorMessage(error);
+  if (context === "auth" && error instanceof ApiError && error.status === 401) {
+    return `Authentication failed. ${error.detail}`;
+  }
+  if (error instanceof ApiError && [0, 401, 403, 413, 422].includes(error.status)) {
+    return message;
+  }
+
+  if (context === "auth") return `Authentication failed. ${message}`;
+  if (context === "form") return `The form could not be saved. ${message}`;
+  if (context === "upload") return `Upload failed. ${message}`;
+  if (context === "ocr") return `OCR action failed. ${message}`;
+  return `Backup action failed. ${message}`;
 }

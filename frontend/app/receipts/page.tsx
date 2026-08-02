@@ -18,7 +18,7 @@ import {
   Panel,
   StatusBadge
 } from "@/components/wealth-ui";
-import { apiBlob, apiFetch, apiUrl, errorMessage } from "@/lib/api";
+import { apiBlob, apiFetch, apiUrl, contextualErrorMessage, errorMessage } from "@/lib/api";
 import { formatFileSize } from "@/lib/format";
 import type { OCRResult, Receipt, ReceiptList } from "@/types/finance";
 
@@ -73,7 +73,7 @@ export default function ReceiptsPage() {
       setMessage("Receipt uploaded.");
       await loadReceipts();
     } catch (uploadError) {
-      setError(errorMessage(uploadError));
+      setError(contextualErrorMessage(uploadError, "upload"));
     } finally {
       setUploading(false);
     }
@@ -114,7 +114,7 @@ export default function ReceiptsPage() {
       });
       setMessage("OCR review ready.");
     } catch (ocrError) {
-      setError(errorMessage(ocrError));
+      setError(contextualErrorMessage(ocrError, "ocr"));
     } finally {
       setOcrProcessingId(null);
     }

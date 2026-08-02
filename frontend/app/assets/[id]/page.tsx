@@ -8,7 +8,7 @@ import type { FormEvent } from "react";
 import { AppFrame } from "@/components/app-frame";
 import { Field, FormMessage, inputClass } from "@/components/form-shell";
 import { ProtectedRoute } from "@/components/protected-route";
-import { apiFetch, apiUrl, errorMessage } from "@/lib/api";
+import { apiFetch, apiUrl, contextualErrorMessage, errorMessage } from "@/lib/api";
 import { formatFileSize, formatMoney, statusLabel } from "@/lib/format";
 import type { Asset, AssetHistory, AssetHistoryList, VaultDocument, VaultDocumentList } from "@/types/finance";
 
@@ -101,7 +101,7 @@ export default function AssetDetailPage() {
       setMessage("Document uploaded.");
       await loadAsset();
     } catch (uploadError) {
-      setError(errorMessage(uploadError));
+      setError(contextualErrorMessage(uploadError, "upload"));
     }
   }
 

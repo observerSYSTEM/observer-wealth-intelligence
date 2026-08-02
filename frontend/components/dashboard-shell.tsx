@@ -75,7 +75,7 @@ export function DashboardShell() {
       <AppFrame>
         <section className="space-y-5 py-5">
           <PageHeader
-            eyebrow="Dashboard 3.1"
+            eyebrow="Dashboard 3.0"
             title="Wealth Control Centre"
             subtitle="Portfolio, savings, vault, OCR, goals, notifications, and backups."
             icon={<LayoutIcon />}

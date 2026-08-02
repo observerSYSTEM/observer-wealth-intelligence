@@ -15,7 +15,7 @@ import {
   Panel,
   StatusBadge
 } from "@/components/wealth-ui";
-import { apiFetch, errorMessage } from "@/lib/api";
+import { apiFetch, contextualErrorMessage, errorMessage } from "@/lib/api";
 import { formatFileSize, statusLabel } from "@/lib/format";
 import type {
   AutomationJob,
@@ -93,7 +93,7 @@ export default function AutomationPage() {
       setMessage("Backup schedule saved.");
       await loadAutomation();
     } catch (scheduleError) {
-      setError(errorMessage(scheduleError));
+      setError(contextualErrorMessage(scheduleError, "backup"));
     } finally {
       setBusy(false);
     }
@@ -111,7 +111,7 @@ export default function AutomationPage() {
       setMessage("Backup completed and verified.");
       await loadAutomation();
     } catch (backupError) {
-      setError(errorMessage(backupError));
+      setError(contextualErrorMessage(backupError, "backup"));
     } finally {
       setBusy(false);
     }
@@ -126,7 +126,7 @@ export default function AutomationPage() {
       });
       await loadAutomation();
     } catch (verifyError) {
-      setError(errorMessage(verifyError));
+      setError(contextualErrorMessage(verifyError, "backup"));
     }
   }
 
